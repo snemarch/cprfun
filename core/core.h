@@ -47,9 +47,6 @@ bool isValidCpr(const std::string& cpr);
 ******************************************************************************/
 Hash hashFromCpr(const std::string& cpr);
 
-
-
 }
 
-
-#endif
+#endif // cprfun__core_h

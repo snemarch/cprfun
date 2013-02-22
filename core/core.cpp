@@ -1,16 +1,20 @@
 #include "stdafx.h"
-#include "core.h"
-
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+
+#include "core.h"
+#include "SHA256.h"
+
 
 namespace cprfun {
 
 Hash::Hash(const void *data, size_t length)
 {
-	//TODO: figure out which sha256 implementation to use
-	hash.fill(0);
+	sha256 sha;
+
+	sha.update(data, length);
+	sha.digest(hash);
 }
 
 Hash::Hash(const Hash& other)
