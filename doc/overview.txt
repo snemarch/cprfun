@@ -1,0 +1,50 @@
+A little fun with Danish CPR numbers.
+
+Apparently, some people believe that storing hashes of CPR numbers is a safe
+thing to do, since cryptographic hashes are irreversible. A little knowledge is
+a dangerous thing, as the saying goes.
+
+This little toy project aims to show why such a practice is a bad idea, and to
+act as an excuse for doing a little C++ programming and familiarizing myself
+with some C++11 features. Oh, and testing Microsofts new Git support in VS2012.
+
+Upon initial observation, a CPR number consists of 10 numeric digits. A really
+naïve bruteforce would be a 10^10 exhaustive search, which is a fairly big
+number - but even assuming a (low!) 50k attempts/sec, that'd still only be ~55
+hours... clearly not secure enough. The purpose of this project is to show just
+how fast we can do the brute-forcing with a series of simple optimizations, to
+drive the point home.
+
+We clearly don't have to brute the entire 10^10 space for CPR numbers, though.
+The first six digits are DD/MM/YY, which reduces the key space a lot. The last
+four digits used to be a MOD11 code, but these days I believe the entire 10k
+range is valid. The YY part is "somewhat special", but basically the exhaustive
+key space is reduced to 366*100*10000 - because I'm lazy, I won't do exact leap
+year calculations during the bruteforce (at least not initially), since it can
+be filtered afterwards anyway.
+
+Having reduced the key space to 366 million entries, we're down to ~2 hours
+exhaustive search for our hypothetical 50k attemps/sec guesstimate. But lets
+get cracking and see what kind of real-world speed we can reach :-)
+
+Project breakdown:
+==================
+1) project setup, getting the most fundamental core routines done.
+2) tool to print hash of a given CPR number.
+3) single-threaded (relatively) naïve bruteforcer.
+4) optimization.
+5) initial multi-threaded implementation.
+6) optimization.
+7) pre-gen hash->cpr table to sqlite database, lookup tool.
+8) linux port?
+
+Considerations:
+===============
+*) Shortcuts *will* be taken, for simplicity and for speed.
+*) Portability will be kept in mind (attempting no Windowsisms) but I won't be
+	going all-in (unaligned memory access is likely to happen).
+*) Ability to support alternate hashing functions will be given a bit of
+	thought, but won't be given priority during initial design.
+*) Try to keep permutation iteration separate from action right from the start.
+	Probably using std::function - now we finally have them, we do want to use
+	lambdas, right? :-)
