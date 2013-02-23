@@ -3,7 +3,13 @@
 #include "targetver.h"
 
 // Standard C/C++ headers
-#include <stdio.h>
-#include <tchar.h>
+#include <array>
+#include <cstdint>
+#include <cstdio>
+#include <functional>
+#include <iomanip>
+#include <numeric>
+#include <sstream>
+
 
 #endif // NO_PRECOMPILED_HEADERS

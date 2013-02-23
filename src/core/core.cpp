@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <chrono>
 
 #include "core.h"
 #include "SHA256.h"
@@ -107,4 +108,61 @@ Hash hashFromCpr(const std::string& cpr)
 
 
 
+class StopWatchImpl
+{
+public:
+	typedef std::chrono::high_resolution_clock clock_t;
+
+	clock_t clock;
+	clock_t::time_point start, end;
+};
+
+StopWatch::StopWatch() : impl(new StopWatchImpl)
+{
+	reset();
 }
+
+StopWatch::~StopWatch()
+{
+	delete impl;
+}
+
+void StopWatch::reset()
+{
+	impl->start = impl->start.max();
+	impl->end = impl->end.min();
+}
+
+void StopWatch::start()
+{
+	impl->start = impl->clock.now();
+	impl->end = impl->end.min();
+}
+
+void StopWatch::stop()
+{
+	impl->end = impl->clock.now();
+}
+
+uint64_t StopWatch::getMilli() const
+{
+	StopWatchImpl::clock_t::time_point end;
+
+	if(impl->end == impl->end.min() ) {
+		// clock is "still running"
+		end = impl->clock.now();
+	} else {
+		end = impl->end;
+	}
+
+	return std::chrono::duration_cast<std::chrono::milliseconds> ( end - impl->start).count();
+}
+
+std::string StopWatch::getFriendly() const
+{
+	//TODO: hhmmss.uu
+	return getMilli() + "ms";
+}
+
+
+} // namespace cprfun
