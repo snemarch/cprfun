@@ -69,7 +69,24 @@ void benchmark(uint32_t targetIterations)
 	printf("Runtime %llu ms, %llu hashops/sec", sw.getMilli(), (static_cast<uint64_t>(numPermutations)*1000)/sw.getMilli() );
 }
 
-
+void bruteforce(const Hash& _targetHash)
+{
+	const Hash targetHash = hashFromCpr("3112921337");
+	printf( "Scanning for hash %s\n", targetHash.toString().c_str() );
+	
+	runpermutations(0, (100*10000) - 1, true, [=](const string& cpr) {
+		if(( cpr.substr(0, 4) == "0101") && (cpr.substr(6, 4) == "0000") ) {
+			printf("reached %s\n", cpr.c_str() );
+		}
+		Hash currentHash = hashFromCpr(cpr);
+		if(currentHash == targetHash)
+		{
+			printf( "Got a match! CPR == %s\n", cpr.c_str() );
+			return true;
+		}
+		return false;
+	});
+}
 
 int main(int argc, char* argv[])
 {
@@ -83,25 +100,15 @@ int main(int argc, char* argv[])
 	if( string(argv[1]) == "--benchmark" ) {
 		benchmark(10000);
 	} else {
-		puts("target CPR scanning not implemented yet");
-
-	}
-
-	/*
-	const Hash targetHash = hashFromCpr("1510017321");	// 4aa7a49b7bed8eda47a0fbe7d0cc428d1fcdc5161774ec73be55530f63243b5a
-	printf( "Scanning for hash %s\n", targetHash.toString().c_str() );
-	
-	runpermutations(0, 10000, true, [=](const string& cpr) {
-		Hash currentHash = hashFromCpr(cpr);
-		if(currentHash == targetHash)
-		{
-			printf( "Got a match! CPR == %s\n", cpr.c_str() );
-			return true;
+		string targetHashString = argv[1];
+		if(targetHashString.length() != 64) {
+			puts("sha256-string must be 64 characters long");
+			return 0;
 		}
-		return false;
-	});
-	*/
-
+		//TODO: convert from hex-string
+		Hash targetHash(targetHashString.data(), targetHashString.length());
+		bruteforce(targetHash);
+	}
 
 	return 0;
 }
