@@ -10,9 +10,11 @@ namespace cprfun {
 
 class Hash {
 public:
+	Hash();
 	Hash(const void *data, size_t length);
 	Hash(const Hash& other);
 
+	void assign(const Hash& other);
 	bool equals(const Hash& other) const;
 	std::string toString() const;
 
@@ -20,7 +22,6 @@ private:
 	static const size_t hashlength = 256/8;
 	std::array<std::uint8_t, hashlength> hash;
 
-	Hash();	// no default constructor
 };
 
 inline bool operator== (const Hash& lhs, const Hash& rhs)

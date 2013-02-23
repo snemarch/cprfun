@@ -9,6 +9,11 @@
 
 namespace cprfun {
 
+Hash::Hash()
+{
+	hash.fill(0);
+}
+
 Hash::Hash(const void *data, size_t length)
 {
 	sha256 sha;
@@ -19,9 +24,13 @@ Hash::Hash(const void *data, size_t length)
 
 Hash::Hash(const Hash& other)
 {
-	hash = other.hash;
+	assign(other);
 }
 
+void Hash::assign(const Hash& other)
+{
+	hash = other.hash;
+}
 
 bool Hash::equals(const Hash& other) const
 {
