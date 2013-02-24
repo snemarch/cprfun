@@ -1,17 +1,22 @@
 #include "stdafx.h"
 #include <array>
+#include <cassert>
 #include <cstdint>
+#include <cstdio>
 #include <functional>
-#include <iomanip>
-#include <numeric>
-#include <sstream>
 
 #include <core/core.h>
 
 using namespace cprfun;
 using namespace std;
 
-static const unsigned days_per_year = 366;	// to avoid dealing with leap years
+static const unsigned days_per_year = 366;										// to avoid dealing with leap years
+
+// lookup table defs and helper function forward declaration.
+typedef array<char[4], days_per_year> lookup_t;									// (day,month) -> DDMM chars (not string, no NUL!)
+static lookup_t generateDayMonthLookupTable();
+static const lookup_t g_dayMonthLookup = generateDayMonthLookupTable();
+
 
 void runpermutations(uint32_t start, uint32_t len, bool exhaustive, std::function<bool(const string&)> func)
 {
@@ -23,21 +28,18 @@ void runpermutations(uint32_t start, uint32_t len, bool exhaustive, std::functio
 	//
 	// Still does feel a bit dirty mixing C++ strings and C-style sprintf like that, though. Ohyeah: Microsoft specific
 	// sprintf_s, we'll deal with that later.
-
 	string cpr;
 	cpr.reserve(11);// DDMMYYXXXX + NUL byte
 	cpr.resize(10);	
 
 	for(unsigned iter = start; iter < start+len; ++iter)
 	{
-		for(unsigned month=0; month<days_per_month.size(); ++month)
+		for(unsigned dayAndMonth=0; dayAndMonth<days_per_year; ++dayAndMonth)
 		{
-			for(unsigned day=0; day<days_per_month[month]; ++day)
-			{
-				sprintf_s(&cpr[0], 11, "%02u%02u%06u", day+1, month+1, iter);
-				if( func(cpr) && !exhaustive ) {
-					return;
-				}
+			memcpy( &cpr[0], g_dayMonthLookup[dayAndMonth], sizeof(g_dayMonthLookup[0]) );	// first four chars: DDMM
+			sprintf_s(&cpr[4], 11, "%06u", iter);											// then follows the [0-999999]
+			if( func(cpr) && !exhaustive ) {
+				return;
 			}
 		}
 	}
@@ -45,9 +47,10 @@ void runpermutations(uint32_t start, uint32_t len, bool exhaustive, std::functio
 
 void benchmark(uint32_t targetIterations)
 {
-	stringstream format;
-	format << "3112" << setfill('0') << setw(6) << targetIterations-1;
-	const string targetCpr( format.str() );
+	char cprStrInput[12+1];
+
+	sprintf_s(cprStrInput, sizeof(cprStrInput), "3112%06u", targetIterations - 1);
+	const string targetCpr( cprStrInput );
 	const Hash targetHash( hashFromCpr(targetCpr) );
 
 	printf( "Benchmarking - expecting to reach %lu permutations, cpr [%s] and hash [%s]\n",
@@ -91,6 +94,26 @@ void bruteforce(const Hash& targetHash)
 	});
 }
 
+static lookup_t generateDayMonthLookupTable()
+{
+	static const std::array<unsigned, 12> days_per_month = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+	char buf[5];
+	lookup_t result;
+
+	unsigned index = 0;
+	for(unsigned month=0; month<days_per_month.size(); ++month)
+	{
+		for(unsigned day=0; day<days_per_month[month]; ++day)
+		{
+			assert(index < days_per_year);
+			sprintf_s(buf, sizeof(buf), "%02u%02u", day+1, month+1);
+			memcpy( &result[index++], buf, sizeof(result[index]) );
+		}
+	}
+
+	return result;
+}
+
 int main(int argc, char* argv[])
 {
 	if(argc < 2)
@@ -101,7 +124,7 @@ int main(int argc, char* argv[])
 	}
 
 	if( string(argv[1]) == "--benchmark" ) {
-		benchmark(10000);
+		benchmark(20000);
 	} else {
 		try
 		{

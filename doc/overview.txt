@@ -56,6 +56,7 @@ for x86 target. Single-threaded versions have been affinity-limited to one core
 and HIGH thread priority.
 
 v0.3	=> ~405-425k hashops/sec
-v0.4.0	=> ~992k hashops/sec		(stringstream -> chararray + sprintf)
-v0.4.1	=> ~1025k hashops/sec		(avoid string-from-char* in inner loop)
-v0.4.2	=> ~1108k hashops/sec		(core/hashFromCpr: isValidCpr check->assert)
+v0.4.0	=> ~992k hashops/sec		(stringstream -> chararray + sprintf)			~2.390x
+v0.4.1	=> ~1025k hashops/sec		(avoid string-from-char* in inner loop)			~1.033x
+v0.4.2	=> ~1108k hashops/sec		(core/hashFromCpr: isValidCpr check->assert)	~1.081x
+v0.4.3	=> ~1260k hashops/sec		(ddmm string computation -> lookup table)		~1.138x

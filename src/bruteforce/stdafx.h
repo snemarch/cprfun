@@ -4,12 +4,9 @@
 
 // Standard C/C++ headers
 #include <array>
+#include <cassert>
 #include <cstdint>
 #include <cstdio>
 #include <functional>
-#include <iomanip>
-#include <numeric>
-#include <sstream>
-
 
 #endif // NO_PRECOMPILED_HEADERS
