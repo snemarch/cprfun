@@ -56,4 +56,4 @@ for x86 target. Single-threaded versions have been affinity-limited to one core
 and HIGH thread priority.
 
 v0.3	=> ~405-425k hashops/sec
-v0.4.1	=> ~992k hashops/sec
+v0.4.0	=> ~992k hashops/sec
