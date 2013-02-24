@@ -34,7 +34,7 @@ void runpermutations(uint32_t start, uint32_t len, bool exhaustive, std::functio
 		{
 			for(unsigned day=0; day<days_per_month[month]; ++day)
 			{
-				sprintf_s(&cpr[0], 11, "%02d%02d%06d", day+1, month+1, iter);
+				sprintf_s(&cpr[0], 11, "%02u%02u%06u", day+1, month+1, iter);
 				if( func(cpr) && !exhaustive ) {
 					return;
 				}
@@ -50,9 +50,6 @@ void benchmark(uint32_t targetIterations)
 	const string targetCpr( format.str() );
 	const Hash targetHash( hashFromCpr(targetCpr) );
 
-	Hash foundHash;
-	string foundCpr;
-
 	printf( "Benchmarking - expecting to reach %lu permutations, cpr [%s] and hash [%s]\n",
 		targetIterations * days_per_year, targetCpr.c_str(), targetHash.toString().c_str() );
 
@@ -64,16 +61,15 @@ void benchmark(uint32_t targetIterations)
 		Hash currentHash = hashFromCpr(cpr);
 		if(currentHash == targetHash)
 		{
-			foundHash.assign(currentHash);
-			foundCpr = cpr;
+			printf( "After %u iterations: found cpr [%s] with hash [%s] \n", numPermutations,
+				cpr.c_str(), currentHash.toString().c_str() );
+
 			return true;
 		}
 		return false;
 	});
 	sw.stop();
 
-	printf( "After %u iterations: found cpr [%s] with hash [%s] \n", numPermutations,
-		foundCpr.c_str(), foundHash.toString().c_str() );
 	printf("Runtime %llu ms, %llu hashops/sec", sw.getMilli(), (static_cast<uint64_t>(numPermutations)*1000)/sw.getMilli() );
 }
 

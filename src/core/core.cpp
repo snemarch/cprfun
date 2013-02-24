@@ -35,6 +35,7 @@ void Hash::assign(const Hash& other)
 
 bool Hash::equals(const Hash& other) const
 {
+	//TODO: examine if there's anything to gain from a memcmp or manual native-integer-size based compare.
 	return hash == other.hash;
 }
 
@@ -130,13 +131,11 @@ bool isValidCpr(const std::string& cpr)
 /******************************************************************************
 * returns a Hash from a CPR string (DDMMYY-XXXX and DDMMYYXXXX both supported)
 *
-* Throws somethingsomething on error
+* It's the client's resposibility to ensure the input cpr is well-formed.
 ******************************************************************************/
 Hash hashFromCpr(const std::string& cpr)
 {
-	if(!isValidCpr(cpr)) {
-		throw std::runtime_error("nope, chuck testa");
-	}
+	assert( isValidCpr(cpr) );
 
 	if(cpr.length() == 10) {
 		return Hash( cpr.data(), 10 );

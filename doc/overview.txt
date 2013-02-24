@@ -58,3 +58,4 @@ and HIGH thread priority.
 v0.3	=> ~405-425k hashops/sec
 v0.4.0	=> ~992k hashops/sec		(stringstream -> chararray + sprintf)
 v0.4.1	=> ~1025k hashops/sec		(avoid string-from-char* in inner loop)
+v0.4.2	=> ~1108k hashops/sec		(core/hashFromCpr: isValidCpr check->assert)
