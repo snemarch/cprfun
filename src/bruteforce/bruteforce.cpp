@@ -17,7 +17,17 @@ void runpermutations(uint32_t start, uint32_t len, bool exhaustive, std::functio
 {
 	static const std::array<unsigned, 12> days_per_month = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
-	char cpr[11];
+	// the following code definitely has smells to it - mostly depending on reserve guaranteeing we can put a NUL byte
+	// seems like a bit of a hack. But it's not as bad as it might initially look: C++11 requires disallows COW strings,
+	// and requires them to be contiguous in memory, so the below should be valid.
+	//
+	// Still does feel a bit dirty mixing C++ strings and C-style sprintf like that, though. Ohyeah: Microsoft specific
+	// sprintf_s, we'll deal with that later.
+
+	string cpr;
+	cpr.reserve(11);// DDMMYYXXXX + NUL byte
+	cpr.resize(10);	
+
 	for(unsigned iter = start; iter < start+len; ++iter)
 	{
 		for(unsigned month=0; month<days_per_month.size(); ++month)
