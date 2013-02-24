@@ -48,3 +48,12 @@ Considerations:
 *) Try to keep permutation iteration separate from action right from the start.
 	Probably using std::function - now we finally have them, we do want to use
 	lambdas, right? :-)
+
+Benchmarking:
+=============
+Tests run on an i7-3770 at stock 3.40GHz speed, win7-x64, bruteforce compiled
+for x86 target. Single-threaded versions have been affinity-limited to one core
+and HIGH thread priority.
+
+v0.3	=> ~405-425k hashops/sec
+v0.4.1	=> ~992k hashops/sec

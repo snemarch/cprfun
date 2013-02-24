@@ -17,16 +17,15 @@ void runpermutations(uint32_t start, uint32_t len, bool exhaustive, std::functio
 {
 	static const std::array<unsigned, 12> days_per_month = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
-	// the following is hopelessly slow - that's on purpose so we have something to optimize later :-)
+	char cpr[11];
 	for(unsigned iter = start; iter < start+len; ++iter)
 	{
 		for(unsigned month=0; month<days_per_month.size(); ++month)
 		{
 			for(unsigned day=0; day<days_per_month[month]; ++day)
 			{
-				stringstream ss;
-				ss << setfill('0') << setw(2) << day+1 << setw(2) << month+1 << setw(6) << iter;
-				if( func(ss.str()) && !exhaustive ) {
+				sprintf_s(&cpr[0], 11, "%02d%02d%06d", day+1, month+1, iter);
+				if( func(cpr) && !exhaustive ) {
 					return;
 				}
 			}
