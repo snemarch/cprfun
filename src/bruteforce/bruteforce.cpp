@@ -11,12 +11,11 @@
 using namespace cprfun;
 using namespace std;
 
+static const unsigned days_per_year = 366;	// to avoid dealing with leap years
+
 void runpermutations(uint32_t start, uint32_t len, bool exhaustive, std::function<bool(const string&)> func)
 {
 	static const std::array<unsigned, 12> days_per_month = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-
-// 	int total = accumulate(days_per_month.begin(), days_per_month.end(), 0, [](int accu, int next) { return accu+next; } );
-// 	printf("days sum: %d\n", total);
 
 	// the following is hopelessly slow - that's on purpose so we have something to optimize later :-)
 	for(unsigned iter = start; iter < start+len; ++iter)
@@ -46,7 +45,7 @@ void benchmark(uint32_t targetIterations)
 	string foundCpr;
 
 	printf( "Benchmarking - expecting to reach %lu permutations, cpr [%s] and hash [%s]\n",
-		targetIterations * 366, targetCpr.c_str(), targetHash.toString().c_str() );
+		targetIterations * days_per_year, targetCpr.c_str(), targetHash.toString().c_str() );
 
 	StopWatch sw;
 	sw.start();
@@ -69,9 +68,8 @@ void benchmark(uint32_t targetIterations)
 	printf("Runtime %llu ms, %llu hashops/sec", sw.getMilli(), (static_cast<uint64_t>(numPermutations)*1000)/sw.getMilli() );
 }
 
-void bruteforce(const Hash& _targetHash)
+void bruteforce(const Hash& targetHash)
 {
-	const Hash targetHash = hashFromCpr("3112921337");
 	printf( "Scanning for hash %s\n", targetHash.toString().c_str() );
 	
 	runpermutations(0, (100*10000) - 1, true, [=](const string& cpr) {
@@ -100,14 +98,16 @@ int main(int argc, char* argv[])
 	if( string(argv[1]) == "--benchmark" ) {
 		benchmark(10000);
 	} else {
-		string targetHashString = argv[1];
-		if(targetHashString.length() != 64) {
-			puts("sha256-string must be 64 characters long");
-			return 0;
+		try
+		{
+			Hash targetHash = Hash::fromHexString(argv[1]);
+			bruteforce(targetHash);
 		}
-		//TODO: convert from hex-string
-		Hash targetHash(targetHashString.data(), targetHashString.length());
-		bruteforce(targetHash);
+		catch(const runtime_error &e)
+		{
+			puts( e.what() );
+			return -1;
+		}
 	}
 
 	return 0;

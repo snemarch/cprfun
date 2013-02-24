@@ -53,6 +53,45 @@ std::string Hash::toString() const
 	return temp;
 }
 
+static int fromHexNibble(char nibble)
+{
+	if(nibble >= '0' && nibble <= '9') {
+		return nibble - '0';
+	}
+
+	nibble |= 0x20; // converts upper- to lowercase
+	if ( nibble >= 'a' && nibble <= 'f' ) {
+		return (nibble - 'a' + 10);
+	}
+
+	return -1;
+}
+
+Hash Hash::fromHexString(const std::string& input)
+{
+	std::array<uint8_t, hashlength> blob = { 0 };
+
+	if(input.length() != hashlength*2)
+	{
+		throw std::runtime_error("hashstring must be 64 hexadecimal characters");
+	}
+
+	for(int i=0; i<hashlength; ++i)
+	{
+		int byte =	(fromHexNibble(input[i*2 + 0]) << 4) |
+					(fromHexNibble(input[i*2 + 1]));
+		if ( static_cast<unsigned>(byte) > 0xFF) {
+			throw std::runtime_error("hashstring must be 64 hexadecimal characters");
+		}
+		blob[i] = byte & 0xFF;
+	}
+
+	Hash temp;
+	temp.hash = blob;
+	return temp;
+}
+
+
 
 // strips out the dash in a DDMMYY-XXXX string. Assumes well formed input.
 static std::string stripdash(std::string input)

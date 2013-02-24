@@ -18,6 +18,8 @@ public:
 	bool equals(const Hash& other) const;
 	std::string toString() const;
 
+	static Hash fromHexString(const std::string& input);
+
 private:
 	static const size_t hashlength = 256/8;
 	std::array<std::uint8_t, hashlength> hash;
