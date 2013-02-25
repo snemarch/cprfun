@@ -22,7 +22,7 @@ void benchmark(uint32_t targetIterations)
 	StopWatch sw;
 	sw.start();
 	uint32_t numPermutations = 0;
-	runpermutations(0, targetIterations, true, [&](const char *cpr) {
+	runpermutations(0, targetIterations, true, [&](const char *cpr) -> bool {
 		++numPermutations;
 		Hash currentHash(cpr, 10);
 		if(currentHash == targetHash)
@@ -43,7 +43,7 @@ void bruteforce(const Hash& targetHash)
 {
 	printf( "Scanning for hash %s\n", targetHash.toString().c_str() );
 	
-	runpermutations(0, (100*10000) - 1, true, [=](const char *cpr) {
+	runpermutations(0, (100*10000) - 1, true, [=](const char *cpr) -> bool {
 		if( (0 == memcmp( &cpr[0], "0101", 4)) &&
 			(0 == memcmp( &cpr[6], "0000", 4)) )
 		{

@@ -1,59 +1,108 @@
 #include "stdafx.h"
+#include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <thread>
+#include <vector>
 
 #include <core/core.h>
 
 using namespace cprfun;
 using namespace std;
 
-void bruteforce(const Hash& targetHash)
+struct threadparam_t 
 {
-	printf( "Scanning for hash %s\n", targetHash.toString().c_str() );
+	const Hash	*targetHash;
+	uint32_t	start;
+	uint32_t	count;
+	uint8_t		threadnum;
+};
 
-	runpermutations(0, (100*10000) - 1, true, [=](const char *cpr) {
-		if( (0 == memcmp( &cpr[0], "0101", 4)) &&
-			(0 == memcmp( &cpr[6], "0000", 4)) )
-		{
-			printf("reached %s\n", cpr );
-		}
+static void bruteforce(const threadparam_t param)
+{
+	printf( "Thread %d: scanning for hash %s, range %u-%u\n",
+		param.threadnum, param.targetHash->toString().c_str(), param.start, param.start + param.count );
 
+	runpermutations(param.start, param.count, true, [=](const char *cpr) -> bool {
 		Hash currentHash(cpr, 10);
-		if(currentHash == targetHash)
+		if(currentHash == *param.targetHash)
 		{
-			printf( "Got a match! CPR == %s\n", cpr );
+			printf( "Thread %d: got a match! CPR == %s\n", param.threadnum, cpr );
 			return true;
 		}
 		return false;
 	});
+
+	printf( "Thread %d: exhausted keyspace slice\n", param.threadnum );
 }
 
+static vector<thread> createAndLaunchWorkers(uint8_t numThreads, const Hash& targetHash);
+static void waitForWorkers(vector<thread>& workers);
 
 int main(int argc, char *argv[])
 {
 	if(argc != 3)
 	{
 		puts("bruteforce [numthreads] [sha256-hash] - tries to find a CPR number that matches your hash.");
+		puts("numthreads must be in [1..255] range");
 		return 0;
 	}
 
-	/*
-	try
-	{
-		Hash targetHash = Hash::fromHexString(argv[2]);
+	try {
+		const int numThreads = stoi(argv[1]);
+		if(1 > numThreads || numThreads > 255) {
+			throw out_of_range("numthreads must be in [1..255] range");
+		}
+
+		const Hash targetHash = Hash::fromHexString(argv[2]);
+
+		vector<thread> threads = createAndLaunchWorkers(static_cast<uint8_t>(numThreads), targetHash);
+		puts("Worker threads launched, waiting for completion - this may take a while!\n");
+		waitForWorkers(threads);
 	}
-	catch(const runtime_error &e)
-	{
-		puts( e.what() );
+	catch(const invalid_argument& ex) {
+		printf( "Invalid argument: %s\n", ex.what() );
 		return -1;
 	}
-	*/
-
-	const string targetCpr("3112999999");
-	const Hash targetHash = hashFromCpr(targetCpr);
-	const unsigned numThreads = 2;
-
-	bruteforce(targetHash);
+	catch(const out_of_range& ex) {
+		printf( "Out of range: %s\n", ex.what() );
+		return -1;
+	}
+	catch(const runtime_error& ex) {
+		printf( "Runtime error: %s\n", ex.what() );
+		return -1;
+	}
 
 	return 0;
+}
+
+static vector<thread> createAndLaunchWorkers(uint8_t numThreads, const Hash& targetHash)
+{
+	const uint32_t keyspace = 1000000;
+	const uint32_t slicesize = static_cast<unsigned>( ceil(static_cast<double>(keyspace) / numThreads) );
+
+	vector<thread> workers;
+	for(uint8_t t=0; t<numThreads; ++t)
+	{
+		threadparam_t param;
+
+		param.start = t * slicesize;
+		param.count = min( slicesize, (keyspace - param.start) );
+		param.targetHash = &targetHash;
+		param.threadnum = t;
+
+		workers.push_back( thread(bruteforce, param) );
+	}
+	return workers;
+}
+
+static void waitForWorkers(vector<thread>& workers)
+{
+	for(auto& thread : workers)
+	{
+		if( thread.joinable() )
+		{
+			thread.join();
+		}
+	}
 }
