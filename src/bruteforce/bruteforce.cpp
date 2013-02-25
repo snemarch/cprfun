@@ -20,14 +20,11 @@ static const lookup_t g_dayMonthLookup = generateDayMonthLookupTable();
 
 void runpermutations(uint32_t start, uint32_t len, bool exhaustive, std::function<bool(const string&)> func)
 {
-	static const std::array<unsigned, 12> days_per_month = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-
 	// the following code definitely has smells to it - mostly depending on reserve guaranteeing we can put a NUL byte
 	// seems like a bit of a hack. But it's not as bad as it might initially look: C++11 requires disallows COW strings,
 	// and requires them to be contiguous in memory, so the below should be valid.
 	//
-	// Still does feel a bit dirty mixing C++ strings and C-style sprintf like that, though. Ohyeah: Microsoft specific
-	// sprintf_s, we'll deal with that later.
+	// Still does feel a bit dirty using C++ strings like this :)
 	string cpr;
 	cpr.reserve(11);// DDMMYYXXXX + NUL byte
 	cpr.resize(10);	
@@ -37,7 +34,8 @@ void runpermutations(uint32_t start, uint32_t len, bool exhaustive, std::functio
 		for(unsigned dayAndMonth=0; dayAndMonth<days_per_year; ++dayAndMonth)
 		{
 			memcpy( &cpr[0], g_dayMonthLookup[dayAndMonth], sizeof(g_dayMonthLookup[0]) );	// first four chars: DDMM
-			sprintf_s(&cpr[4], 11, "%06u", iter);											// then follows the [0-999999]
+			base10fixWidthStr<6>(&cpr[4], iter);											// then follows the [0-999999]
+
 			if( func(cpr) && !exhaustive ) {
 				return;
 			}
@@ -97,20 +95,26 @@ void bruteforce(const Hash& targetHash)
 static lookup_t generateDayMonthLookupTable()
 {
 	static const std::array<unsigned, 12> days_per_month = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-	char buf[5];
-	lookup_t result;
+	
+	lookup_t result = { 0 };
+	// Initialize 'result' to avoid (spurious, since we fill it completely below?) analyzer warning about using it
+	// uninitialized at the return statement. Speed hit is negligible anyway, especially since this is one-time init.
 
+	char buf[4];
 	unsigned index = 0;
 	for(unsigned month=0; month<days_per_month.size(); ++month)
 	{
 		for(unsigned day=0; day<days_per_month[month]; ++day)
 		{
 			assert(index < days_per_year);
-			sprintf_s(buf, sizeof(buf), "%02u%02u", day+1, month+1);
+
+			base10fixWidthStr<2>(&buf[0], day + 1);
+			base10fixWidthStr<2>(&buf[2], month + 1);
 			memcpy( &result[index++], buf, sizeof(result[index]) );
 		}
 	}
 
+	assert( index == days_per_year );
 	return result;
 }
 

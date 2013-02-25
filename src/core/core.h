@@ -3,6 +3,7 @@
 #define cprfun__core_h
 
 #include <array>
+#include <cassert>
 #include <cstdint>
 #include <string>
 
@@ -69,6 +70,25 @@ public:
 private:
 	StopWatchImpl *impl;
 };
+
+
+
+/*******************************************************************************
+ * Generates leading-0-filled base10 string representation of a fixed-width/size
+ * unsigned integer input.
+ * Guarantees against buffer overflows, but it's up to the caller to ensure that 
+ * the number first within the give bounds, or results will be incorrect.
+ ******************************************************************************/
+template <unsigned int N> inline void base10fixWidthStr(char output[N], unsigned input)
+{
+	// assert( input+1 <= pow(10, N) ); // don't really want to depend on <math> and floating-point numbers.
+	for(auto i=0; i<N; ++i)
+	{
+		output[N-i-1] = (input % 10) + '0';
+		input /= 10;
+	}
+	assert (input == 0);
+}
 
 
 } // namespace cprfun
