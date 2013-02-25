@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <atomic>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -7,8 +8,13 @@
 
 #include <core/core.h>
 
+// hash(3112999999) => 7c1bb9f1d19393fdbcb04537a679d661180f31166b8ecb21135711c84883914e	// full keyspace
+// hash(3112009999) => b200598b0dcc2848b488c70bb3d8261702977ded093fd82ecf9911bf3852e077	// small search, early-out
+
 using namespace cprfun;
 using namespace std;
+
+atomic<bool> g_stopSearching(false);
 
 struct threadparam_t 
 {
@@ -23,14 +29,14 @@ static void bruteforce(const threadparam_t param)
 	printf( "Thread %d: scanning for hash %s, range %u-%u\n",
 		param.threadnum, param.targetHash->toString().c_str(), param.start, param.start + param.count );
 
-	runpermutations(param.start, param.count, true, [=](const char *cpr) -> bool {
+	runpermutations(param.start, param.count, false, [=](const char *cpr) -> bool {
 		Hash currentHash(cpr, 10);
 		if(currentHash == *param.targetHash)
 		{
 			printf( "Thread %d: got a match! CPR == %s\n", param.threadnum, cpr );
-			return true;
+			g_stopSearching = true;
 		}
-		return false;
+		return g_stopSearching;
 	});
 
 	printf( "Thread %d: exhausted keyspace slice\n", param.threadnum );

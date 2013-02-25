@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "SHA256.h"
+#include <string.h> // memcpy
 /*
  * An implementation of the SHA-256 hash function.
  *
@@ -116,17 +117,17 @@ namespace cprfun
 #define SHR(x, n)   ((x)>>(n))
 
 /* determine fixed size types */
-#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
-#include <stdint.h>
-typedef uint8_t				U8;
-typedef uint32_t			U32;
-typedef uint64_t			U64;
-#elif defined(_MSC_VER)
-typedef unsigned char		U8;
-typedef unsigned __int64	U64;
-typedef unsigned int		U32;
+#if defined(_MSC_VER)
+	typedef unsigned char		U8;
+	typedef unsigned __int64	U64;
+	typedef unsigned int		U32;
 #elif defined(__sun) || defined(__sun__)
 #include <sys/inttypes.h>
+	typedef uint8_t				U8;
+	typedef uint32_t			U32;
+	typedef uint64_t			U64;
+#else
+#include <stdint.h>
 typedef uint8_t				U8;
 typedef uint32_t			U32;
 typedef uint64_t			U64;

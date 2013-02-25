@@ -1,6 +1,8 @@
 #include "stdafx.h"
+#include <cstring>
 #include <cstdint>
 #include <cstdio>
+#include <iostream>
 
 #include <core/core.h>
 
@@ -16,7 +18,7 @@ void benchmark(uint32_t targetIterations)
 	const string targetCpr( cprStrInput );
 	const Hash targetHash( hashFromCpr(targetCpr) );
 
-	printf( "Benchmarking - expecting to reach %lu permutations, cpr [%s] and hash [%s]\n",
+	printf( "Benchmarking - expecting to reach %u permutations, cpr [%s] and hash [%s]\n",
 		targetIterations * days_per_year, targetCpr.c_str(), targetHash.toString().c_str() );
 
 	StopWatch sw;
@@ -36,7 +38,7 @@ void benchmark(uint32_t targetIterations)
 	});
 	sw.stop();
 
-	printf("Runtime %llu ms, %llu hashops/sec\n", sw.getMilli(), (static_cast<uint64_t>(numPermutations)*1000)/sw.getMilli() );
+	cout << "Runtime " << sw.getMilli() << "ms, " << (static_cast<uint64_t>(numPermutations)*1000)/sw.getMilli() << " hashops/sec" << endl;
 }
 
 void bruteforce(const Hash& targetHash)

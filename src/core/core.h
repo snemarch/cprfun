@@ -87,7 +87,7 @@ private:
 template <unsigned int N> inline void base10fixWidthStr(char output[N], unsigned input)
 {
 	// assert( input+1 <= pow(10, N) ); // don't really want to depend on <math> and floating-point numbers.
-	for(auto i=0; i<N; ++i)
+	for(unsigned i=0; i<N; ++i)
 	{
 		output[N-i-1] = (input % 10) + '0';
 		input /= 10;

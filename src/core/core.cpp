@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cctype>
 #include <chrono>
+#include <cstring>
 #include <functional>
 
 #include "core.h"
@@ -72,14 +73,14 @@ static int fromHexNibble(char nibble)
 
 Hash Hash::fromHexString(const std::string& input)
 {
-	std::array<uint8_t, hashlength> blob = { 0 };
+	std::array<uint8_t, hashlength> blob = {{ 0 }};
 
 	if(input.length() != hashlength*2)
 	{
 		throw std::runtime_error("hashstring must be 64 hexadecimal characters");
 	}
 
-	for(int i=0; i<hashlength; ++i)
+	for(unsigned i=0; i<hashlength; ++i)
 	{
 		int byte =	(fromHexNibble(input[i*2 + 0]) << 4) |
 					(fromHexNibble(input[i*2 + 1]));
@@ -228,7 +229,7 @@ void runpermutations(uint32_t start, uint32_t len, bool exhaustive, std::functio
 	{
 		for(unsigned dayAndMonth=0; dayAndMonth<days_per_year; ++dayAndMonth)
 		{
-			memcpy( &cpr[0], g_dayMonthLookup[dayAndMonth], sizeof(g_dayMonthLookup[0]) );	// first four chars: DDMM
+			std::memcpy( &cpr[0], g_dayMonthLookup[dayAndMonth], sizeof(g_dayMonthLookup[0]) );	// first four chars: DDMM
 			base10fixWidthStr<6>(&cpr[4], iter);											// then follows the [0-999999]
 
 			if( func(cpr) && !exhaustive ) {
@@ -240,9 +241,9 @@ void runpermutations(uint32_t start, uint32_t len, bool exhaustive, std::functio
 
 static lookup_t generateDayMonthLookupTable()
 {
-	static const std::array<unsigned, 12> days_per_month = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-
-	lookup_t result = { 0 };
+	static const std::array<unsigned, 12> days_per_month = {{ 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }};
+	
+	lookup_t result = {{{ 0 }}};	// GCC 4.7.2 wants all those brackets... does the standard require those?
 	// Initialize 'result' to avoid (spurious, since we fill it completely below?) analyzer warning about using it
 	// uninitialized at the return statement. Speed hit is negligible anyway, especially since this is one-time init.
 
