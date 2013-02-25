@@ -17,6 +17,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "calchash", "src\calchash\ca
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bruteforce", "src\bruteforce\bruteforce.vcxproj", "{366775C7-DDED-473E-B2FA-A3888C9501EA}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "multibrute", "src\multibrute\multibrute.vcxproj", "{5FA11773-A9B7-4DA7-BB8A-33F986B4937C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -35,6 +37,10 @@ Global
 		{366775C7-DDED-473E-B2FA-A3888C9501EA}.Debug|Win32.Build.0 = Debug|Win32
 		{366775C7-DDED-473E-B2FA-A3888C9501EA}.Release|Win32.ActiveCfg = Release|Win32
 		{366775C7-DDED-473E-B2FA-A3888C9501EA}.Release|Win32.Build.0 = Release|Win32
+		{5FA11773-A9B7-4DA7-BB8A-33F986B4937C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5FA11773-A9B7-4DA7-BB8A-33F986B4937C}.Debug|Win32.Build.0 = Debug|Win32
+		{5FA11773-A9B7-4DA7-BB8A-33F986B4937C}.Release|Win32.ActiveCfg = Release|Win32
+		{5FA11773-A9B7-4DA7-BB8A-33F986B4937C}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
