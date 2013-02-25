@@ -61,3 +61,4 @@ v0.4.1	=> ~1025k hashops/sec		(avoid string-from-char* in inner loop)			~1.033x
 v0.4.2	=> ~1108k hashops/sec		(core/hashFromCpr: isValidCpr check->assert)	~1.081x
 v0.4.3	=> ~1260k hashops/sec		(ddmm string computation -> lookup table)		~1.138x
 v0.4.4	=> ~1611k hashops/sec		(sprintf -> base10fixWidthStr)					~1.279x
+v0.4.5	=> ~1644k hashops/sec		(runpermutations: string -> char array)			~1.020x

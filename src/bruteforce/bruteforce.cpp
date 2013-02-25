@@ -18,16 +18,9 @@ static lookup_t generateDayMonthLookupTable();
 static const lookup_t g_dayMonthLookup = generateDayMonthLookupTable();
 
 
-void runpermutations(uint32_t start, uint32_t len, bool exhaustive, std::function<bool(const string&)> func)
+void runpermutations(uint32_t start, uint32_t len, bool exhaustive, std::function<bool(const char*)> func)
 {
-	// the following code definitely has smells to it - mostly depending on reserve guaranteeing we can put a NUL byte
-	// seems like a bit of a hack. But it's not as bad as it might initially look: C++11 requires disallows COW strings,
-	// and requires them to be contiguous in memory, so the below should be valid.
-	//
-	// Still does feel a bit dirty using C++ strings like this :)
-	string cpr;
-	cpr.reserve(11);// DDMMYYXXXX + NUL byte
-	cpr.resize(10);	
+	char cpr[11] = {};	// DDMMYYXXXX + NUL byte
 
 	for(unsigned iter = start; iter < start+len; ++iter)
 	{
@@ -45,9 +38,10 @@ void runpermutations(uint32_t start, uint32_t len, bool exhaustive, std::functio
 
 void benchmark(uint32_t targetIterations)
 {
-	char cprStrInput[12+1];
+	char cprStrInput[10+1] = "3112";
+	base10fixWidthStr<6>(&cprStrInput[4], targetIterations - 1);
+	cprStrInput[10] = 0;
 
-	sprintf_s(cprStrInput, sizeof(cprStrInput), "3112%06u", targetIterations - 1);
 	const string targetCpr( cprStrInput );
 	const Hash targetHash( hashFromCpr(targetCpr) );
 
@@ -57,13 +51,13 @@ void benchmark(uint32_t targetIterations)
 	StopWatch sw;
 	sw.start();
 	uint32_t numPermutations = 0;
-	runpermutations(0, targetIterations, true, [&](const string& cpr) {
+	runpermutations(0, targetIterations, true, [&](const char *cpr) {
 		++numPermutations;
-		Hash currentHash = hashFromCpr(cpr);
+		Hash currentHash(cpr, 10);
 		if(currentHash == targetHash)
 		{
 			printf( "After %u iterations: found cpr [%s] with hash [%s] \n", numPermutations,
-				cpr.c_str(), currentHash.toString().c_str() );
+				cpr, currentHash.toString().c_str() );
 
 			return true;
 		}
@@ -71,21 +65,24 @@ void benchmark(uint32_t targetIterations)
 	});
 	sw.stop();
 
-	printf("Runtime %llu ms, %llu hashops/sec", sw.getMilli(), (static_cast<uint64_t>(numPermutations)*1000)/sw.getMilli() );
+	printf("Runtime %llu ms, %llu hashops/sec\n", sw.getMilli(), (static_cast<uint64_t>(numPermutations)*1000)/sw.getMilli() );
 }
 
 void bruteforce(const Hash& targetHash)
 {
 	printf( "Scanning for hash %s\n", targetHash.toString().c_str() );
 	
-	runpermutations(0, (100*10000) - 1, true, [=](const string& cpr) {
-		if(( cpr.substr(0, 4) == "0101") && (cpr.substr(6, 4) == "0000") ) {
-			printf("reached %s\n", cpr.c_str() );
+	runpermutations(0, (100*10000) - 1, true, [=](const char *cpr) {
+		if( (0 == memcmp( &cpr[0], "0101", 4)) &&
+			(0 == memcmp( &cpr[6], "0000", 4)) )
+		{
+			printf("reached %s\n", cpr );
 		}
-		Hash currentHash = hashFromCpr(cpr);
+
+		Hash currentHash(cpr, 10);
 		if(currentHash == targetHash)
 		{
-			printf( "Got a match! CPR == %s\n", cpr.c_str() );
+			printf( "Got a match! CPR == %s\n", cpr );
 			return true;
 		}
 		return false;
