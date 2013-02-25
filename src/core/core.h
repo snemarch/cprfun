@@ -5,9 +5,14 @@
 #include <array>
 #include <cassert>
 #include <cstdint>
+#include <functional>
 #include <string>
 
 namespace cprfun {
+
+static const unsigned days_per_year = 366;										// to avoid dealing with leap years
+
+void runpermutations(uint32_t start, uint32_t len, bool exhaustive, std::function<bool(const char*)> func);
 
 class Hash {
 public:

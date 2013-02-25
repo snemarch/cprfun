@@ -1,40 +1,11 @@
 #include "stdafx.h"
-#include <array>
-#include <cassert>
 #include <cstdint>
 #include <cstdio>
-#include <functional>
 
 #include <core/core.h>
 
 using namespace cprfun;
 using namespace std;
-
-static const unsigned days_per_year = 366;										// to avoid dealing with leap years
-
-// lookup table defs and helper function forward declaration.
-typedef array<char[4], days_per_year> lookup_t;									// (day,month) -> DDMM chars (not string, no NUL!)
-static lookup_t generateDayMonthLookupTable();
-static const lookup_t g_dayMonthLookup = generateDayMonthLookupTable();
-
-
-void runpermutations(uint32_t start, uint32_t len, bool exhaustive, std::function<bool(const char*)> func)
-{
-	char cpr[11] = {};	// DDMMYYXXXX + NUL byte
-
-	for(unsigned iter = start; iter < start+len; ++iter)
-	{
-		for(unsigned dayAndMonth=0; dayAndMonth<days_per_year; ++dayAndMonth)
-		{
-			memcpy( &cpr[0], g_dayMonthLookup[dayAndMonth], sizeof(g_dayMonthLookup[0]) );	// first four chars: DDMM
-			base10fixWidthStr<6>(&cpr[4], iter);											// then follows the [0-999999]
-
-			if( func(cpr) && !exhaustive ) {
-				return;
-			}
-		}
-	}
-}
 
 void benchmark(uint32_t targetIterations)
 {
@@ -87,32 +58,6 @@ void bruteforce(const Hash& targetHash)
 		}
 		return false;
 	});
-}
-
-static lookup_t generateDayMonthLookupTable()
-{
-	static const std::array<unsigned, 12> days_per_month = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-	
-	lookup_t result = { 0 };
-	// Initialize 'result' to avoid (spurious, since we fill it completely below?) analyzer warning about using it
-	// uninitialized at the return statement. Speed hit is negligible anyway, especially since this is one-time init.
-
-	char buf[4];
-	unsigned index = 0;
-	for(unsigned month=0; month<days_per_month.size(); ++month)
-	{
-		for(unsigned day=0; day<days_per_month[month]; ++day)
-		{
-			assert(index < days_per_year);
-
-			base10fixWidthStr<2>(&buf[0], day + 1);
-			base10fixWidthStr<2>(&buf[2], month + 1);
-			memcpy( &result[index++], buf, sizeof(result[index]) );
-		}
-	}
-
-	assert( index == days_per_year );
-	return result;
 }
 
 int main(int argc, char* argv[])
