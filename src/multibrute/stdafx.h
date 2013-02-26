@@ -5,7 +5,7 @@
 #include <atomic>
 #include <cmath>
 #include <cstdint>
-#include <cstdio>
+#include <iostream>
 #include <thread>
 #include <vector>
 

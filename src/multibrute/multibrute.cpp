@@ -2,7 +2,7 @@
 #include <atomic>
 #include <cmath>
 #include <cstdint>
-#include <cstdio>
+#include <iostream>
 #include <thread>
 #include <vector>
 
@@ -21,25 +21,26 @@ struct threadparam_t
 	const Hash	*targetHash;
 	uint32_t	start;
 	uint32_t	count;
-	uint8_t		threadnum;
+	int			threadnum;
 };
 
 static void bruteforce(const threadparam_t param)
 {
-	printf( "Thread %d: scanning for hash %s, range %u-%u\n",
-		param.threadnum, param.targetHash->toString().c_str(), param.start, param.start + param.count );
+	cout << "Thread " << param.threadnum << 
+			": scanning for hash " << param.targetHash->toString() 	<< 
+			", range " << param.start << "-" << (param.start + param.count) << endl;
 
 	runpermutations(param.start, param.count, false, [=](const char *cpr) -> bool {
 		Hash currentHash(cpr, 10);
 		if(currentHash == *param.targetHash)
 		{
-			printf( "Thread %d: got a match! CPR == %s\n", param.threadnum, cpr );
+			cout << "Thread " << param.threadnum << ": got a match! CPR == " << cpr << endl;
 			g_stopSearching = true;
 		}
 		return g_stopSearching;
 	});
 
-	printf( "Thread %d: exhausted keyspace slice\n", param.threadnum );
+	cout << "Thread " << param.threadnum << ": exhausted keyspace slice" << endl;
 }
 
 static vector<thread> createAndLaunchWorkers(uint8_t numThreads, const Hash& targetHash);
@@ -49,8 +50,8 @@ int main(int argc, char *argv[])
 {
 	if(argc != 3)
 	{
-		puts("bruteforce [numthreads] [sha256-hash] - tries to find a CPR number that matches your hash.");
-		puts("numthreads must be in [1..255] range");
+		cout << "bruteforce [numthreads] [sha256-hash] - tries to find a CPR number that matches your hash." << endl <<
+				"numthreads must be in [1..255] range" << endl;
 		return 0;
 	}
 
@@ -63,19 +64,19 @@ int main(int argc, char *argv[])
 		const Hash targetHash = Hash::fromHexString(argv[2]);
 
 		vector<thread> threads = createAndLaunchWorkers(static_cast<uint8_t>(numThreads), targetHash);
-		puts("Worker threads launched, waiting for completion - this may take a while!\n");
+		cout <<  "Worker threads launched, waiting for completion - this may take a while!" << endl;
 		waitForWorkers(threads);
 	}
 	catch(const invalid_argument& ex) {
-		printf( "Invalid argument: %s\n", ex.what() );
+		cout << "Invalid argument: " << ex.what() << endl;
 		return -1;
 	}
 	catch(const out_of_range& ex) {
-		printf( "Out of range: %s\n", ex.what() );
+		cout << "Out of range: " << ex.what() << endl;
 		return -1;
 	}
 	catch(const runtime_error& ex) {
-		printf( "Runtime error: %s\n", ex.what() );
+		cout << "Runtime error: " << ex.what() << endl;
 		return -1;
 	}
 

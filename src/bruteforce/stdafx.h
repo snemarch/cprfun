@@ -4,7 +4,6 @@
 // Standard C/C++ headers
 #include <cstring>
 #include <cstdint>
-#include <cstdio>
 #include <iostream>
 
 #endif // NO_PRECOMPILED_HEADERS

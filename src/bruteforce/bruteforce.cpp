@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include <cstring>
 #include <cstdint>
-#include <cstdio>
 #include <iostream>
 
 #include <core/core.h>
@@ -18,8 +17,8 @@ void benchmark(uint32_t targetIterations)
 	const string targetCpr( cprStrInput );
 	const Hash targetHash( hashFromCpr(targetCpr) );
 
-	printf( "Benchmarking - expecting to reach %u permutations, cpr [%s] and hash [%s]\n",
-		targetIterations * days_per_year, targetCpr.c_str(), targetHash.toString().c_str() );
+	cout << "Benchmarking - expecting to reach " << (targetIterations * days_per_year) <<
+		" permutations, cpr [" << targetCpr << "] and hash " << targetHash.toString() << endl;
 
 	StopWatch sw;
 	sw.start();
@@ -29,8 +28,8 @@ void benchmark(uint32_t targetIterations)
 		Hash currentHash(cpr, 10);
 		if(currentHash == targetHash)
 		{
-			printf( "After %u iterations: found cpr [%s] with hash [%s] \n", numPermutations,
-				cpr, currentHash.toString().c_str() );
+			cout << "After " << numPermutations << " iterations: found cpr [" <<
+					cpr << "] with hash [" << currentHash.toString() << "]" << endl;
 
 			return true;
 		}
@@ -43,19 +42,19 @@ void benchmark(uint32_t targetIterations)
 
 void bruteforce(const Hash& targetHash)
 {
-	printf( "Scanning for hash %s\n", targetHash.toString().c_str() );
+	cout << "Scanning for hash " << targetHash.toString() << endl;
 	
 	runpermutations(0, (100*10000) - 1, true, [=](const char *cpr) -> bool {
 		if( (0 == memcmp( &cpr[0], "0101", 4)) &&
 			(0 == memcmp( &cpr[6], "0000", 4)) )
 		{
-			printf("reached %s\n", cpr );
+			cout << "reached " << cpr << endl;
 		}
 
 		Hash currentHash(cpr, 10);
 		if(currentHash == targetHash)
 		{
-			printf( "Got a match! CPR == %s\n", cpr );
+			cout << "Got a match! CPR == " << cpr << endl;
 			return true;
 		}
 		return false;
@@ -66,8 +65,8 @@ int main(int argc, char* argv[])
 {
 	if(argc < 2)
 	{
-		puts("bruteforce [sha256-hash] - tries to find a CPR number that matches your hash");
-		puts("\tAlternatively, specify --benchmark to run 10k iterations for an estimate of hashops/sec.");
+		cout << "bruteforce [sha256-hash] - tries to find a CPR number that matches your hash" << endl <<
+				"\tAlternatively, specify --benchmark to run 10k iterations for an estimate of hashops/sec." << endl;
 		return 0;
 	}
 
@@ -81,7 +80,7 @@ int main(int argc, char* argv[])
 		}
 		catch(const runtime_error &e)
 		{
-			puts( e.what() );
+			cout << e.what() << endl;
 			return -1;
 		}
 	}

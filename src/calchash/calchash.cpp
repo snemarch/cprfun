@@ -1,25 +1,26 @@
 #include "stdafx.h"
-#include <cstdio>
+#include <iostream>
 #include <string>
 
 #include <core/core.h>
 
 using namespace cprfun;
+using namespace std;
 
 int main(int argc, char *argv[])
 {
 	if(argc < 2) {
-		puts("usage: calchash [cprnumber], where cprnumber is in DDMMYYXXXX or DDMMYY-XXXX form.");
+		cout << "usage: calchash [cprnumber], where cprnumber is in DDMMYYXXXX or DDMMYY-XXXX form." << endl;
 		return 0;
 	}
 
 	if(!isValidCpr(argv[1])) {
-		puts("error: invalid cprnumber");
+		cout << "error: invalid cprnumber" << endl;
 		return -1;
 	}
 
 	Hash cprHash = hashFromCpr( argv[1] );
-	printf("hash(%s) => %s\n", argv[1], cprHash.toString().c_str() );
+	cout << "hash(" << argv[1] << ") => " << cprHash.toString() << endl;
 
 	return 0;
 }
