@@ -19,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bruteforce", "src\bruteforc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "multibrute", "src\multibrute\multibrute.vcxproj", "{5FA11773-A9B7-4DA7-BB8A-33F986B4937C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dbtool", "src\dbtool\dbtool.vcxproj", "{8D38B473-652B-48A8-8290-CA1C34A8120E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -41,11 +43,16 @@ Global
 		{5FA11773-A9B7-4DA7-BB8A-33F986B4937C}.Debug|Win32.Build.0 = Debug|Win32
 		{5FA11773-A9B7-4DA7-BB8A-33F986B4937C}.Release|Win32.ActiveCfg = Release|Win32
 		{5FA11773-A9B7-4DA7-BB8A-33F986B4937C}.Release|Win32.Build.0 = Release|Win32
+		{8D38B473-652B-48A8-8290-CA1C34A8120E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8D38B473-652B-48A8-8290-CA1C34A8120E}.Debug|Win32.Build.0 = Debug|Win32
+		{8D38B473-652B-48A8-8290-CA1C34A8120E}.Release|Win32.ActiveCfg = Release|Win32
+		{8D38B473-652B-48A8-8290-CA1C34A8120E}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{981AE140-BD57-4D68-9E23-2A04691DB810} = {A907505D-9A89-41EE-99CF-EFA9D378FC26}
+		{8D38B473-652B-48A8-8290-CA1C34A8120E} = {A907505D-9A89-41EE-99CF-EFA9D378FC26}
 	EndGlobalSection
 EndGlobal
