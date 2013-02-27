@@ -149,29 +149,42 @@ Hash hashFromCpr(const std::string& cpr)
 
 
 
-class StopWatchImpl
+/*******************************************************************************
+ * StopWatch: used for portable high-resolution wall-clock timing.
+ *
+ * Pretty bad and very likely buggy implementation, but it gets the benchmarking
+ * job done. Rewrite before even considering using it for anything else :-)
+ *
+ * Might want to move all code to the Impl and have StopWatch itself forward
+ * everything there, the current "a bit in both places" is messy.
+ ******************************************************************************/
+class StopWatch::Impl
 {
 public:
+	Impl()
+	{
+		reset();
+	}
+
+	void reset()
+	{
+		start = start.max();
+		end = end.min();
+	}
+
 	typedef std::chrono::high_resolution_clock clock_t;
 
 	clock_t clock;
 	clock_t::time_point start, end;
 };
 
-StopWatch::StopWatch() : impl(new StopWatchImpl)
-{
-	reset();
-}
+StopWatch::StopWatch() : impl(new Impl) { }
+StopWatch::~StopWatch() { }
 
-StopWatch::~StopWatch()
-{
-	delete impl;
-}
 
 void StopWatch::reset()
 {
-	impl->start = impl->start.max();
-	impl->end = impl->end.min();
+	impl->reset();
 }
 
 void StopWatch::start()
@@ -187,7 +200,7 @@ void StopWatch::stop()
 
 uint64_t StopWatch::getMilli() const
 {
-	StopWatchImpl::clock_t::time_point end;
+	Impl::clock_t::time_point end;
 
 	if(impl->end == impl->end.min() ) {
 		// clock is "still running"

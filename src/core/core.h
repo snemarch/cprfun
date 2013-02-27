@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <string>
 
 namespace cprfun {
@@ -59,7 +60,6 @@ Hash hashFromCpr(const std::string& cpr);
 
 
 
-class StopWatchImpl;
 class StopWatch
 {
 public:
@@ -73,7 +73,8 @@ public:
 	std::string		getFriendly() const;
 
 private:
-	StopWatchImpl *impl;
+	class Impl;
+	std::unique_ptr<Impl> impl;
 };
 
 
