@@ -44,9 +44,9 @@ void bruteforce(const Hash& targetHash)
 {
 	cout << "Scanning for hash " << targetHash.toString() << endl;
 	
-	runpermutations(0, (100*10000) - 1, true, [=](const char *cpr) -> bool {
-		if( (0 == memcmp( &cpr[0], "0101", 4)) &&
-			(0 == memcmp( &cpr[6], "0000", 4)) )
+	unsigned iterations = 0;
+	runpermutations(0, (100*10000) - 1, true, [&](const char *cpr) -> bool {
+		if( (iterations++ % 3660000) == 0 )
 		{
 			cout << "reached " << cpr << endl;
 		}

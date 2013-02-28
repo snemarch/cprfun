@@ -13,7 +13,7 @@ namespace cprfun
 class HashStore
 {
 public:
-	HashStore(const HashStore& other);
+	HashStore(HashStore&& other);
 	~HashStore();
 
 	static HashStore createNew(const std::string& filename);

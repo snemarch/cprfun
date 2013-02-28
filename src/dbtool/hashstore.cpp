@@ -21,9 +21,8 @@ private:
 	sqlite3		*handle;
 };
 
-HashStore::HashStore(const HashStore& other) // : impl( other.impl )
+HashStore::HashStore(HashStore&& other) : impl( std::move(other.impl) )
 {
-	//TODO: find a way to do this cleanly - copy constructor requires const?
 }
 
 HashStore::HashStore() : impl(new Impl)
