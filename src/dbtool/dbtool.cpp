@@ -13,20 +13,30 @@ static void hs_create(const std::string& hsfilename)
 {
 	cout << "Creating hashstore - this will take a while..." << endl;
 
-	HashStore store( HashStore::createNew(hsfilename) );
-	unsigned iterations = 0;
-	runpermutations(0, ( 10*10000), true, [&](const char *cpr) -> bool {
-//	runpermutations(0, (100*10000), true, [&](const char *cpr) -> bool {
-		if( (iterations++ % 366000) == 0 )
-		{
-			cout << "reached " << cpr << " (" << fixed << setprecision(3) << ((iterations*100.0)/360000000.0) << "% done)" << endl;
-		}
+	try
+	{
+		HashStore store( HashStore::createNew(hsfilename) );
+		unsigned iterations = 0;
+		runpermutations(0, ( 10*10000), true, [&](const char *cpr) -> bool {
+//		runpermutations(0, (100*10000), true, [&](const char *cpr) -> bool {
+			if( (iterations++ % 366000) == 0 )
+			{
+				cout << "reached " << cpr << " (" << fixed << setprecision(3) << ((iterations*100.0)/360000000.0) << "% done)" << endl;
+			}
 
-		Hash currentHash(cpr, 10);
-		store.put(currentHash, cpr);
-		return false; // keep on truckin'
-	});
-	cout << "done!" << endl;
+			Hash currentHash(cpr, 10);
+			store.put(currentHash, cpr);
+			return false; // keep on truckin'
+		});
+		cout << "done!" << endl;
+		cout << "build index - this will also take a while..." << endl;
+		store.buildIndex();
+		cout << "done!" << endl;
+	}
+	catch(const runtime_error& ex)
+	{
+		cout << "runtime error: " << ex.what() << endl;
+	}
 }
 
 static void hs_lookup(const std::string& hsfilename, const std::string& hashstr)

@@ -50,7 +50,7 @@ public:
 	void putHash(const Hash& hash, const std::string& cpr)
 	{
 		cache.push_back( std::make_pair(hash, stoul(cpr)) );
-		if(cache.size() == 5000) {
+		if(cache.size() == 10000) {
 			flushCache();
 		}
 	}
@@ -85,6 +85,13 @@ public:
 		return true;
 		//debug with sqlite3 tool: select lower(quote(hash)), cpr from hashmap limit 10;
 	}
+
+	void buildIndex()
+	{
+		flushCache();
+		exec("CREATE INDEX hashindex ON hashmap(hash);");
+	}
+
 
 private:
 	void flushCache()
@@ -150,14 +157,22 @@ HashStore HashStore::createNew(const std::string& filename)
 	HashStore result;
 
 	result.impl->open(filename);
-	result.impl->exec("CREATE TABLE hashmap (hash BLOB(32) PRIMARY KEY COLLATE BINARY, cpr INTEGER);");
+	result.impl->exec("CREATE TABLE hashmap (hash BLOB(32) COLLATE BINARY, cpr INTEGER);");
 	// ref http://www.sqlite.org/lang_createtable.html
 
+//	result.impl->exec("PRAGMA journal_mode=MEMORY;");
+	result.impl->exec("PRAGMA journal_mode=OFF;");
 	result.impl->exec("PRAGMA synchronous=OFF;");
-	result.impl->exec("PRAGMA journal_mode=MEMORY;");
 	result.impl->exec("PRAGMA temp_store=MEMORY;");
+	result.impl->exec("PRAGMA locking_mode=EXCLUSIVE"); // avoid constant acquire/release of file lock
+	result.impl->exec("PRAGMA page_size=4096;");
+	result.impl->exec("PRAGMA cache_size=65536;");	// 256meg cache
+	
 	// http://blog.quibb.org/2010/08/fast-bulk-inserts-into-sqlite/ for speed pragmas
+	// http://www.sqlite.org/pragma.html
 
+	// 10k entries: 01:22:19 - 01:58:58, large period with extremely scattered disk I/O (and thus abysmal throuhgput) during middle of insert period. File ended up at 3.508.666.368 bytes, 156 fragments (lots less than expected!)
+	
 	// examine if it's better to 'CREATE INDEX hashindex ON hashmap(hash)' after initial db construction.
 	// examine if it's better to use TEXT instead of blob - obviously no-go if TEXT can't handle embedded NULs.
 
@@ -182,5 +197,11 @@ bool HashStore::tryGet(const Hash& hash, std::string *cpr)
 {
 	return impl->tryGet(hash, cpr);
 }
+
+void HashStore::buildIndex()
+{
+	impl->buildIndex();
+}
+
 
 } // namespace cprfun

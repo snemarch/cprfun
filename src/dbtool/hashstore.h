@@ -21,6 +21,7 @@ public:
 
 	void put(const Hash& hash, const std::string& cpr);
 	bool tryGet(const Hash&hash, std::string *cpr);
+	void buildIndex();
 
 private:
 	HashStore();
