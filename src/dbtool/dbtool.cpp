@@ -1,5 +1,7 @@
 #include "stdafx.h"
+#include <iomanip>
 #include <iostream>
+#include <string>
 
 #include <core/core.h>
 #include "hashstore.h"
@@ -13,10 +15,11 @@ static void hs_create(const std::string& hsfilename)
 
 	HashStore store( HashStore::createNew(hsfilename) );
 	unsigned iterations = 0;
-	runpermutations(0, (100*10000), true, [&](const char *cpr) -> bool {
-		if( (iterations++ % 3660000) == 0 )
+	runpermutations(0, ( 10*10000), true, [&](const char *cpr) -> bool {
+//	runpermutations(0, (100*10000), true, [&](const char *cpr) -> bool {
+		if( (iterations++ % 366000) == 0 )
 		{
-			cout << "reached " << cpr << endl;
+			cout << "reached " << cpr << " (" << fixed << setprecision(3) << ((iterations*100.0)/360000000.0) << "% done)" << endl;
 		}
 
 		Hash currentHash(cpr, 10);
@@ -45,8 +48,8 @@ int main(int argc, char* argv[])
 {
 	if(argc < 3)
 	{
-		cout << "Usage: dbtool [path\to\hashstore.db] [hashvalue] to lookup hashvalue in hashstore," << endl <<
-				"\t or dbtool --create [path\to\hasthstore.db] to create lookup table (warning: will take a while!)" << endl;
+		cout << "Usage: dbtool [path/to/hashstore.db] [hashvalue] to lookup hashvalue in hashstore," << endl <<
+				"\t or dbtool --create [path/to/hasthstore.db] to create lookup table (warning: will take a while!)" << endl;
 		return 0;
 	}
 

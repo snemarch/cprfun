@@ -57,6 +57,12 @@ std::string Hash::toString() const
 	return temp;
 }
 
+const void* Hash::getHash() const
+{
+	return &hash[0];
+}
+
+
 static int fromHexNibble(char nibble)
 {
 	if(nibble >= '0' && nibble <= '9') {

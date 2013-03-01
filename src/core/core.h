@@ -17,6 +17,8 @@ void runpermutations(uint32_t start, uint32_t len, bool exhaustive, std::functio
 
 class Hash {
 public:
+	static const size_t hashlength = 256/8;
+
 	Hash();
 	Hash(const void *data, size_t length);
 	Hash(const Hash& other);
@@ -25,10 +27,11 @@ public:
 	bool equals(const Hash& other) const;
 	std::string toString() const;
 
+	const void* getHash() const;
+
 	static Hash fromHexString(const std::string& input);
 
 private:
-	static const size_t hashlength = 256/8;
 	std::array<std::uint8_t, hashlength> hash;
 
 };
