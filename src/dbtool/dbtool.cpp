@@ -17,8 +17,10 @@ static void hs_create(const std::string& hsfilename)
 	{
 		HashStore store( HashStore::createNew(hsfilename) );
 		unsigned iterations = 0;
-		runpermutations(0, ( 10*10000), true, [&](const char *cpr) -> bool {
-//		runpermutations(0, (100*10000), true, [&](const char *cpr) -> bool {
+		StopWatch timer;
+		timer.start();
+//		runpermutations(0, ( 10*10000), true, [&](const char *cpr) -> bool {
+		runpermutations(0, (100*10000), true, [&](const char *cpr) -> bool {
 			if( (iterations++ % 366000) == 0 )
 			{
 				cout << "reached " << cpr << " (" << fixed << setprecision(3) << ((iterations*100.0)/360000000.0) << "% done)" << endl;
@@ -28,10 +30,14 @@ static void hs_create(const std::string& hsfilename)
 			store.put(currentHash, cpr);
 			return false; // keep on truckin'
 		});
-		cout << "done!" << endl;
+		timer.stop();
+		cout << "done! - " << timer.getMilli() << "ms" << endl;
 		cout << "build index - this will also take a while..." << endl;
+		timer.reset();
+		timer.start();
 		store.buildIndex();
-		cout << "done!" << endl;
+		timer.stop();
+		cout << "done! - " << timer.getMilli() << "ms" << endl;
 	}
 	catch(const runtime_error& ex)
 	{
