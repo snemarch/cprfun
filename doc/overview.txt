@@ -49,6 +49,18 @@ Considerations:
 	Probably using std::function - now we finally have them, we do want to use
 	lambdas, right? :-)
 
+Future ideas:
+=============
+For the precomputed "dbtool", a content-addressable version might be interesting.
+Simply create a file for each hash, with the CPR string as content, possibly with
+a bit of directory hierarchy to not put millions of files in one subdirectory.
+Per-file content would be small, so should be interned in the MFT, and we get
+B-tree indexing automatically. OTOH each NTFS file record is 1k, so the disk
+overhead will be wasteful compared to a SQLite database. But it should be viable,
+quoting John Carmack https://twitter.com/ID_AA_Carmack/status/138676625729527808
+"Somewhat surprisingly, win7 does just fine with 100,000 files in a directory
+(content addressable storage system)".
+
 Benchmarking:
 =============
 Tests run on an i7-3770 at stock 3.40GHz speed, win7-x64, bruteforce compiled

@@ -1,0 +1,79 @@
+Project benchmarks, reverse chronological order.
+
+
+2022-01-27: Moving from Ryzen5-1600 to Ryzen9-7950x – 1st to 5th gen Zen, 6/12 to 16/32 cores/threads.
+
+Benchmarking the original 32bit VS2012-compiled binaries, then upgrading to VS2022, Win11 x64.
+(Microsoft (R) C/C++ Optimizing Compiler Version 19.34.31937 for x64).
+
+Using affinity 10000 to run on first core of the second CCD – I haven't tested if other cores
+are able to reach high speeds, but Win11 seems to default schedule most stuff to CCD1 so
+my guess is CCD2 is less likely to be disturbed by background stuff. The perf tool I'm
+using doesn't adjust process priority (and unlike affinity, it's not passed on to child
+processes automatically), so the bruteforcer is just running with normal priority.
+The "--benchmark" code should probably be redone with a larger keyspace, and perhaps some
+warmups code, modern CPUs are *ridiculously* fast :-)
+
+The exhaustive keyspace run searches for hash(3112999999)
+
+VS2012 32bit Bruteforce
+	Ryzen 1600, bruteforce --benchmark: Runtime 5138ms, 1424678 hashops/sec
+	Ryzen 7950, bruteforce --benchmark: Runtime 2447ms, 2991418 hashops/sec
+	Ryzen 1600, perf multibrute.exe 12 7c1bb9f1d19393fdbcb04537a679d661180f31166b8ecb21135711c84883914e
+		Elapsed time   : 35.79
+		Kernel time    : 0.19 (0.5%)
+		User time      : 420.13 (1173.9%)
+	Ryzen 7950, perf multibrute.exe 32 7c1bb9f1d19393fdbcb04537a679d661180f31166b8ecb21135711c84883914e
+		Elapsed time   : 9.87
+		Kernel time    : 0.02 (0.2%)
+		User time      : 312.48 (3167.5%)
+	Ryzen 7950, Exhaustive keyspace run:
+		Elapsed time   : 122.49
+		Kernel time    : 0.02 (0.0%)
+		User time      : 121.88 (99.5%)
+
+VS2022 32bit Bruteforce
+	Ryzen 7950, bruteforce --benchmark: Runtime 2325ms, 3148387 hashops/sec
+	Exhaustive keyspace run:
+		Elapsed time   : 114.78
+		Kernel time    : 0.00 (0.0%)
+		User time      : 114.09 (99.4%)
+
+VS2022 64bit Bruteforce
+	Ryzen 7950, bruteforce --benchmark: Runtime 1625ms, 4504615 hashops/sec
+	Exhaustive keyspace run:
+		Elapsed time   : 81.59
+		Kernel time    : 0.02 (0.0%)
+		User time      : 80.25 (98.4%)
+
+
+
+2018-03-03: Moving from i7-3770 to Ryzen5-1600.
+
+Benchmarking the original 32bit VS2012-compiled binaries on a Ryzen5-1600, running Win10 x64:
+Single-threaded benchmark (start /B /HIGH /AFFINITY=1 bruteforce.exe --benchmark):
+Runtime 5138ms, 1424678 hashops/sec
+
+That's fairly slower than the ~1644k hashops/sec from the i7... didn't expect lower single-threaded performance, but
+at least the higher core count makes for greater total speed.
+Also, affinity:1 is consistenly worse than no affinity (~1389521).
+
+4 threads:
+Elapsed time   : 74.69
+Kernel time    : 0.09 (0.1%)
+User time      : 297.69 (398.5%)
+
+6 threads:
+Elapsed time   : 53.89
+Kernel time    : 0.09 (0.2%)
+User time      : 321.19 (596.0%)
+
+8 threads:
+Elapsed time   : 46.61
+Kernel time    : 0.11 (0.2%)
+User time      : 369.53 (792.8%)
+
+12 threads:
+Elapsed time   : 37.61
+Kernel time    : 0.38 (1.0%)
+User time      : 433.55 (1152.6%)

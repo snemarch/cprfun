@@ -6,6 +6,7 @@
 #include <chrono>
 #include <cstring>
 #include <functional>
+#include <stdexcept>
 
 #include "core.h"
 #include "SHA256.h"

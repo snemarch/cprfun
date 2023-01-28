@@ -20,7 +20,7 @@ public:
 	static HashStore openExisting(const std::string& filename);
 
 	void put(const Hash& hash, const std::string& cpr);
-	bool tryGet(const Hash&hash, std::string *cpr);
+	bool tryGet(const Hash& hash, std::string *cpr);
 	void buildIndex();
 
 private:
