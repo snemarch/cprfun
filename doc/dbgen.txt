@@ -1,0 +1,54 @@
+Observations so far:
+	- It seems like creating the table without a primary key, then building an index after all data has been inserted,
+	  is the fastest way to ingest data. When doing this, SQLite seems to use little page cache.
+	- Using "temp_store = memory" requires ~22.5gig memory during index creation, disables the use of worker threads
+	  (those seem to only be used for disk-based merge sort) *AND* it is slower than single-threaded use of scratch
+	  files, huh. It's super weird it's not faster than normal single-threaded mode.
+	- The use of disk-based scratch files (on fast storage!) combined with worker threads seems to be the winner.
+	- If the table is created "without rowid", filesize goes from 32->12gig. But without rowid as primary key,
+	  we need to specify the hash blob as primary key, and get extremely slow insert time.
+
+Further experimentation:
+	- See if it's possible to speed up insert with index / primary key set from the get-go. Pragmas or other tweaks,
+	  perhaps pre-sorting the per-batch items, if that could somehow help?
+	- Other form of batch insertion, e.g. constructing "insert into xxx values(...)" or using json-data inserts.
+	  I expect this to be slower, since there would be a lot of serialising / parsing overhead.
+	- Have db-inserts in a background thread. Could probably be done relatively quick-and dirty with the current
+	  code structure, but a bit of re-architecting is probably a good idea. Stream of single-item inserts would
+	  probably be slow, sending chunks probably good (and can be hacked into the current flush). Bounded queue,
+	  or single-item handover? Should profile to see if generation take enough CPU time that anything can be gained...
+	- Metrics, e.g. generation vs time spent in various sqlite calls? Or skip that overhead and just profile?
+
+
+
+2025-01-26
+==========
+Something that's probably different from 2024-05-05: TEMP is on a 2TB 990 Pro drive, might have been the devdrive back then?
+Note on multithreading: see https://www2.sqlite.org/cvstrac/wiki?p=MultiThreading. It *should* be OK to create the
+sqlite connection in one thread and hand it off to a worker thread, but finalize all statements and call
+sqlite3_thread_cleanup to be a good citizen.
+
+
+updated VS2022CE:					171084ms (2,85min) burst,	363066ms (6,05min) index
+update SQLite 3.40.1 -> 3.48.1		176887ms (2.95min) burst,	346498ms (5.77min) index
+WAL + normal sync					222408ms (3.62min) burst,	486419ms (7.92min) index - slower, but interesting perf. given that this should be crash-safe. Revert.
+40gig cache + 16k pages				170533ms (2.84min) burst,	263442ms (4.39min) index - faster index, cache or pagesize?
+primary key + without rowid			21464662ms (357.74min) burst, 0ms index - superslow, but 32->17gig db size! Revert.
+threads=8 + 32k pages				177302ms (2.96min) burst,	121389ms (2.02min) index
+threads=16 + static bind			169724ms (2.83min) burst,	98774ms (1.65min) index
+don't destroy insert_stmt			168037ms (2.80min) burst,	97233ms (1.62min) index
+threads=32							166312ms (2.77min) burst,	74887ms (1.25min) index (set SQLITE_MAX_WORKER_THREADS env...)
+threads=16 fixed					167815ms (2.80min) burst,	96048ms (1.60min) index (previous 16-thread didn't have MAX_WORKER env, probably ran 8-max?)
+temp_store=MEMORY					165805ms (2.76min) burst,	661927ms (11.03min) index (disables threading AND is super slow?!) Revert.
+disable threading					169896ms (2.83min) burst,	274808ms (4.58min) index. Revet.
+threads=16, 8gig cache				166493ms (2.77min) burst,	86889ms (1.45min) index (realised mem consumption never seemed to reach even 100meg). Revert.
+no cache pragma						170115ms (2.83min) burst,	95123ms (1.59min) index (20+ MB less mem consumption, so SOME extra cache is used if using pragma)
+journal=memory						167255ms (2.79min) burst,	140451ms (2.34min) index. Revert.
+SQLITE_OPEN_NOMUTEX					164043ms (2.73min) burst,	115957ms (1.93min) index.
+temp_store=memory redux				158448ms (2.64min) burst,	648783ms (10.81min) index. Didn't gain from NOMUTEX. Revert.
+
+2024-05-05
+==========
+OLD SYSTEM: 1029225ms (~17min) to burst out data, 6948880ms (~1h55min) to generate index.
+7950 +32gig cache:							255175ms (4.24min) burst (4.03x), 358185ms (5.97min) index (19.40x)
+Samsung 990 Pro 1TB, chosen as "DevDrive"	167385ms (2.79min) burst, 326424ms (5.55min) index

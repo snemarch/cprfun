@@ -13,8 +13,11 @@ namespace cprfun
 class HashStore
 {
 public:
+	HashStore(const HashStore& other) = delete;
 	HashStore(HashStore&& other);
 	~HashStore();
+	HashStore& operator=(const HashStore& other) = delete;
+	HashStore& operator=(HashStore&& other) = delete;
 
 	static HashStore createNew(const std::string& filename);
 	static HashStore openExisting(const std::string& filename);
