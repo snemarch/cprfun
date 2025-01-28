@@ -1,0 +1,26 @@
+Make the project portable - Windows / Linux / macOS, x86 and ARM.
+First step would be deciding on a build system - is there anything less ugly
+than CMake?
+
+Clean up and modernize the codebase. Target C++20, since that should be readily
+available by now.
+
+See if there's more optimizations to be done for the bruteforcing code. Profile!
+
+Use instruction-set support for SHA-256. I haven't looked at what's available
+for ARM (probably at least some SIMD stuff), but Intel SHA extensions / SHA-NI
+has been available since ~2017. Also, specialize the implementation; we're not
+even doing one full block, so there's bound to be a lot of stuff that can be
+cut away or unrolled.
+
+Rust implementation of multibrute. Would be a fun project, interesting to see
+what the performance profile is like, and could be expanded to run in a web
+browser.
+
+Possibly do a GPU implementation? I have no GPU programming experience, so I
+have no idea whether it's viable to do both number-generation and hashing in
+shader code, or if only the hashing can be offloaded (which might not be all
+that much faster, then, because of generation, copying memory back and forth
+etc), but it has the potential to be very fast since the brute-forcing is an
+embarassingly parallel task. Probably requires a bunch of dependendencies
+that complicates portability etc.

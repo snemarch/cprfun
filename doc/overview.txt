@@ -1,8 +1,11 @@
-A little fun with Danish CPR numbers.
+A little fun with Danish CPR (social security) numbers.
 
 Apparently, some people believe that storing hashes of CPR numbers is a safe
 thing to do, since cryptographic hashes are irreversible. A little knowledge is
 a dangerous thing, as the saying goes.
+
+Note: this document is pretty old, and could use some love. More recent stuff
+has been added to benchmark.txt, dbgen.txt and todo.txt.
 
 This little toy project aims to show why such a practice is a bad idea, and to
 act as an excuse for doing a little C++ programming and familiarizing myself
