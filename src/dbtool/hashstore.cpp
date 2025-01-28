@@ -23,7 +23,7 @@ public:
 		int rc = sqlite3_open_v2(db.c_str(), &db_handle, SQLITE_OPEN_READWRITE | (create ? SQLITE_OPEN_CREATE : 0) | SQLITE_OPEN_NOMUTEX, nullptr);
 		if(rc)
 		{
-			std::string msg("can't open database [" + db + "] - error: " + sqlite3_errmsg(handle.get()));
+			std::string msg("can't open database [" + db + "] - error: " + sqlite3_errmsg(db_handle));
 			sqlite3_close(db_handle);
 			handle = nullptr;
 			throw std::runtime_error(msg);

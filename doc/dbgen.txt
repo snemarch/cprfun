@@ -46,6 +46,12 @@ no cache pragma						170115ms (2.83min) burst,	95123ms (1.59min) index (20+ MB l
 journal=memory						167255ms (2.79min) burst,	140451ms (2.34min) index. Revert.
 SQLITE_OPEN_NOMUTEX					164043ms (2.73min) burst,	115957ms (1.93min) index.
 temp_store=memory redux				158448ms (2.64min) burst,	648783ms (10.81min) index. Didn't gain from NOMUTEX. Revert.
+GS-, target AVX2					167129ms (2.79min) burst,	101800ms (1.70min) index. Hm, expected to be faster because of GS-.
+Removed profiler-switches			160647ms (2.68min) burst,	99883ms (1.66min) index. Hm, still not faster, even though security cookie was a massive hit during profiling?
+Reverted back to default codegen	161046ms (2.68min) burst,	115124ms (1.92min) index. 
+SSE2 codegen						159612ms (2.66min) burst,	108727ms (1.81min) index. Hm, doesn't seem to make a difference.
+AVX codegen							156386ms (2.61min) burst,	99793m (1.66min) index. Still seems within normal variance. Let's keep it, though.
+
 
 2024-05-05
 ==========

@@ -66,12 +66,12 @@ int main(int argc, char* argv[])
 	if(argc < 2)
 	{
 		cout << "bruteforce [sha256-hash] - tries to find a CPR number that matches your hash" << endl <<
-				"\tAlternatively, specify --benchmark to run 10k iterations for an estimate of hashops/sec." << endl;
+				"\tAlternatively, specify --benchmark to run 50k iterations for an estimate of hashops/sec." << endl;
 		return 0;
 	}
 
 	if( string(argv[1]) == "--benchmark" ) {
-		benchmark(20000);
+		benchmark(50'000);
 	} else {
 		try
 		{
