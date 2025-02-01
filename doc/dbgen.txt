@@ -54,7 +54,7 @@ AVX codegen							156386ms (2.61min) burst,	99793m (1.66min) index. Still seems 
 Naive background flusher			126720ms (2.11min) burst,	112694ms (1.88min) index.
 condition_variable -> semaphore		88651ms (1.48min) burst,	81007ms (1.35min) index. This run was suspiciously fast! Not sure what happened, seems to have produced a valid db.
 Rerun, fix worker-hang				91438ms (1.54min) burst,	112555ms (1.88min) index. This seems more realistic - are semaphores that more efficient?
-
+Refactor code to WorkQueue.h		89554ms (1.49min) burst,	97776ms (1.62min) index
 
 2024-05-05
 ==========

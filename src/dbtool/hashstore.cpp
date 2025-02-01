@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "hashstore.h"
 #include "sqlite3.h"
+#include "WorkQueue.h"
 #include <mutex>
 #include <semaphore>
 #include <stdexcept>
@@ -9,23 +10,18 @@
 
 namespace cprfun
 {
-enum Buffers { FRONT = 0L, BACK = 1L };
-using hashcache_t = std::vector<std::pair<Hash, unsigned long>>;
-constexpr size_t BUFFER_SIZE = 10'000;
+using hashcache_t = std::pair<Hash, unsigned long>;
 
 class HashStore::Impl
 {
 public:
-	Impl() : handle(nullptr, &sqlite3_close), insert_stmt(nullptr, &sqlite3_finalize)
+	Impl() : handle(nullptr, &sqlite3_close), insert_stmt(nullptr, &sqlite3_finalize), workQueue(10'000)
 	{
-		buffers[Buffers::FRONT]->reserve(BUFFER_SIZE);
-		buffers[Buffers::BACK]->reserve(BUFFER_SIZE);
 		workerThread = std::jthread(&Impl::background_flush, this);
 	}
 
 	~Impl() {
-		running = false;
-		workerReady.release();
+		workQueue.shutdown();
 	}
 
 	void open(const std::string& db, bool create)
@@ -59,12 +55,7 @@ public:
 
 	void putHash(const Hash& hash, const std::string& cpr)
 	{
-		auto &cache = *buffers[Buffers::FRONT];
-
-		cache.push_back( std::make_pair(hash, stoul(cpr)) );
-		if(cache.size() == BUFFER_SIZE) {
-			flushCache();
-		}
+		workQueue.produce(std::make_pair(hash, stoul(cpr)));
 	}
 
 	bool tryGet(const Hash& hash, std::string *cpr)
@@ -99,20 +90,24 @@ public:
 
 	void buildIndex()
 	{
-		flushCache();
+		flushCache(true);
 		exec("CREATE INDEX hashindex ON hashmap(hash);");
 	}
 
 
 private:
-	std::array<std::unique_ptr<hashcache_t>, 2> buffers{std::make_unique<hashcache_t>(), std::make_unique<hashcache_t>()};
-	std::binary_semaphore workerReady{ 0 };
-	std::binary_semaphore bufferAvailable{ 1 };
-	bool running = true;
+	std::unique_ptr<sqlite3, decltype(&sqlite3_close)> handle;
+	std::unique_ptr<sqlite3_stmt, decltype(&sqlite3_finalize)> insert_stmt;
+	cprfun::WorkQueue<hashcache_t> workQueue;
 	std::jthread workerThread;
 
-	void flushCache()
+	void flushCache(bool shutdown = false)
 	{
+		workQueue.flush(shutdown);
+	}
+
+	void initializeInsertStatement() {
+		// Rearchitecture so this can be done *once* at a sensible place, without if guards.
 		static const std::string stmtText("INSERT INTO hashmap VALUES(?1, ?2);");
 		if (!insert_stmt)
 		{
@@ -124,60 +119,45 @@ private:
 			}
 			insert_stmt.reset(stmt);
 		}
-
-		bufferAvailable.acquire();
-
-
-		buffers[Buffers::FRONT]->swap(*buffers[Buffers::BACK]);
-		std::atomic_thread_fence(std::memory_order_release);
-
-		// Signal the worker thread
-		workerReady.release();
 	}
 
 	void background_flush() {
-		while (true) {
-			workerReady.acquire();
-			std::atomic_thread_fence(std::memory_order_acquire);
 
-			if (!running) {
+		while (true) {
+			auto *buffer = workQueue.consume();
+			if (!buffer) {
 				break;
 			}
 
-			actuallyFlushCache(*buffers[Buffers::BACK]);
-			bufferAvailable.release();
-		}
-	}
+			initializeInsertStatement();
 
-	void actuallyFlushCache(hashcache_t &work)
-	{
-		exec("BEGIN TRANSACTION;");
+			exec("BEGIN TRANSACTION;");
 
-		for (auto& item : work)
-		{
-			// The item hash has lifetime until the cache is cleared, so we can use SQLITE_STATIC to avoid
-			// the memory copying SQLITE_TRANSIENT does.
-			sqlite3_bind_blob(insert_stmt.get(), 1, item.first.getHash(), item.first.hashlength, SQLITE_STATIC);
-			sqlite3_bind_int(insert_stmt.get(), 2, item.second);
-
-			if ( SQLITE_DONE != sqlite3_step(insert_stmt.get()) )
+			auto& work = *buffer;
+			for (auto& item : work)
 			{
-				std::string msg(std::string("error executing prepared statement: ") + sqlite3_errmsg(handle.get()));
-				sqlite3_finalize(insert_stmt.get());
-				throw std::runtime_error(msg);
+				// The item hash has lifetime until the cache is cleared, so we can use SQLITE_STATIC to avoid
+				// the memory copying SQLITE_TRANSIENT does.
+				sqlite3_bind_blob(insert_stmt.get(), 1, item.first.getHash(), item.first.hashlength, SQLITE_STATIC);
+				sqlite3_bind_int(insert_stmt.get(), 2, item.second);
+
+				if ( SQLITE_DONE != sqlite3_step(insert_stmt.get()) )
+				{
+					std::string msg(std::string("error executing prepared statement: ") + sqlite3_errmsg(handle.get()));
+					sqlite3_finalize(insert_stmt.get());
+					throw std::runtime_error(msg);
+				}
+
+				sqlite3_reset(insert_stmt.get());
 			}
 
-			sqlite3_reset(insert_stmt.get());
+			exec("COMMIT TRANSACTION;");
+
+			sqlite3_clear_bindings(insert_stmt.get());
+
+			workQueue.done();
 		}
-
-		exec("COMMIT TRANSACTION;");
-
-		sqlite3_clear_bindings(insert_stmt.get());
-		work.clear();
 	}
-
-	std::unique_ptr<sqlite3, decltype(&sqlite3_close)> handle;
-	std::unique_ptr<sqlite3_stmt, decltype(&sqlite3_finalize)> insert_stmt;
 };
 
 HashStore::HashStore(HashStore&& other) : impl( std::move(other.impl) )
