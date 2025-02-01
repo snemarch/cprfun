@@ -51,6 +51,9 @@ Removed profiler-switches			160647ms (2.68min) burst,	99883ms (1.66min) index. H
 Reverted back to default codegen	161046ms (2.68min) burst,	115124ms (1.92min) index. 
 SSE2 codegen						159612ms (2.66min) burst,	108727ms (1.81min) index. Hm, doesn't seem to make a difference.
 AVX codegen							156386ms (2.61min) burst,	99793m (1.66min) index. Still seems within normal variance. Let's keep it, though.
+Naive background flusher			126720ms (2.11min) burst,	112694ms (1.88min) index.
+condition_variable -> semaphore		88651ms (1.48min) burst,	81007ms (1.35min) index. This run was suspiciously fast! Not sure what happened, seems to have produced a valid db.
+Rerun, fix worker-hang				91438ms (1.54min) burst,	112555ms (1.88min) index. This seems more realistic - are semaphores that more efficient?
 
 
 2024-05-05

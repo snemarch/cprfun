@@ -1,27 +1,40 @@
 #include "stdafx.h"
 #include "hashstore.h"
 #include "sqlite3.h"
+#include <mutex>
+#include <semaphore>
 #include <stdexcept>
+#include <thread>
 #include <vector>
 
 namespace cprfun
 {
+enum Buffers { FRONT = 0L, BACK = 1L };
+using hashcache_t = std::vector<std::pair<Hash, unsigned long>>;
+constexpr size_t BUFFER_SIZE = 10'000;
+
 class HashStore::Impl
 {
 public:
 	Impl() : handle(nullptr, &sqlite3_close), insert_stmt(nullptr, &sqlite3_finalize)
 	{
+		buffers[Buffers::FRONT]->reserve(BUFFER_SIZE);
+		buffers[Buffers::BACK]->reserve(BUFFER_SIZE);
+		workerThread = std::jthread(&Impl::background_flush, this);
 	}
 
-	~Impl() = default;
+	~Impl() {
+		running = false;
+		workerReady.release();
+	}
 
 	void open(const std::string& db, bool create)
 	{
 		// Open the database in NOMUTEX mode: multi-threaded where connections, statements etc aren't used by multiple
 		// threads at the same time, so expensive/coarse-grained mutexes aren't used.
 		sqlite3* db_handle;
-		int rc = sqlite3_open_v2(db.c_str(), &db_handle, SQLITE_OPEN_READWRITE | (create ? SQLITE_OPEN_CREATE : 0) | SQLITE_OPEN_NOMUTEX, nullptr);
-		if(rc)
+		const int flags = SQLITE_OPEN_READWRITE | (create ? SQLITE_OPEN_CREATE : 0) | SQLITE_OPEN_NOMUTEX;
+		if(SQLITE_OK != sqlite3_open_v2(db.c_str(), &db_handle, flags, nullptr))
 		{
 			std::string msg("can't open database [" + db + "] - error: " + sqlite3_errmsg(db_handle));
 			sqlite3_close(db_handle);
@@ -46,8 +59,10 @@ public:
 
 	void putHash(const Hash& hash, const std::string& cpr)
 	{
+		auto &cache = *buffers[Buffers::FRONT];
+
 		cache.push_back( std::make_pair(hash, stoul(cpr)) );
-		if(cache.size() == 10000) {
+		if(cache.size() == BUFFER_SIZE) {
 			flushCache();
 		}
 	}
@@ -90,6 +105,12 @@ public:
 
 
 private:
+	std::array<std::unique_ptr<hashcache_t>, 2> buffers{std::make_unique<hashcache_t>(), std::make_unique<hashcache_t>()};
+	std::binary_semaphore workerReady{ 0 };
+	std::binary_semaphore bufferAvailable{ 1 };
+	bool running = true;
+	std::jthread workerThread;
+
 	void flushCache()
 	{
 		static const std::string stmtText("INSERT INTO hashmap VALUES(?1, ?2);");
@@ -104,10 +125,35 @@ private:
 			insert_stmt.reset(stmt);
 		}
 
+		bufferAvailable.acquire();
 
+
+		buffers[Buffers::FRONT]->swap(*buffers[Buffers::BACK]);
+		std::atomic_thread_fence(std::memory_order_release);
+
+		// Signal the worker thread
+		workerReady.release();
+	}
+
+	void background_flush() {
+		while (true) {
+			workerReady.acquire();
+			std::atomic_thread_fence(std::memory_order_acquire);
+
+			if (!running) {
+				break;
+			}
+
+			actuallyFlushCache(*buffers[Buffers::BACK]);
+			bufferAvailable.release();
+		}
+	}
+
+	void actuallyFlushCache(hashcache_t &work)
+	{
 		exec("BEGIN TRANSACTION;");
 
-		for(auto& item : cache)
+		for (auto& item : work)
 		{
 			// The item hash has lifetime until the cache is cleared, so we can use SQLITE_STATIC to avoid
 			// the memory copying SQLITE_TRANSIENT does.
@@ -127,11 +173,9 @@ private:
 		exec("COMMIT TRANSACTION;");
 
 		sqlite3_clear_bindings(insert_stmt.get());
-		cache.clear();
+		work.clear();
 	}
 
-	std::vector<std::pair<Hash, unsigned long>> cache;
-	
 	std::unique_ptr<sqlite3, decltype(&sqlite3_close)> handle;
 	std::unique_ptr<sqlite3_stmt, decltype(&sqlite3_finalize)> insert_stmt;
 };
