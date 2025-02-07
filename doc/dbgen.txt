@@ -58,6 +58,8 @@ Refactor code to WorkQueue.h		89554ms (1.49min) burst,	97776ms (1.62min) index
 Naive emplace_back					88163ms (1.47min) burst,	82686ms (1.38min) index
 Perfect-forward						89139ms (1.49min) burst,	65570ms (1.09min) index. Why so fast indexing? Was it because of the sync.exe before the run?!
 
+MacBook Air M2                      170953ms (2.85min) burst,   326457ms (5.44min) index - not bad for first run on ARM.
+
 2024-05-05
 ==========
 OLD SYSTEM: 1029225ms (~17min) to burst out data, 6948880ms (~1h55min) to generate index.

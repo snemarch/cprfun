@@ -16,11 +16,12 @@ class HashStore::Impl
 public:
 	Impl() : handle(nullptr, &sqlite3_close), insert_stmt(nullptr, &sqlite3_finalize), workQueue(10'000)
 	{
-		workerThread = std::jthread(&Impl::background_flush, this);
+		workerThread = std::thread(&Impl::background_flush, this);
 	}
 
 	~Impl() {
 		workQueue.shutdown();
+		workerThread.join();
 	}
 
 	void open(const std::string& db, bool create)
@@ -98,7 +99,7 @@ private:
 	std::unique_ptr<sqlite3, decltype(&sqlite3_close)> handle;
 	std::unique_ptr<sqlite3_stmt, decltype(&sqlite3_finalize)> insert_stmt;
 	cprfun::WorkQueue<hashcache_t> workQueue;
-	std::jthread workerThread;
+	std::thread workerThread;
 
 	void flushCache(bool shutdown = false)
 	{
