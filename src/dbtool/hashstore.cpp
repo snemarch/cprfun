@@ -3,7 +3,6 @@
 #include "sqlite3.h"
 #include "WorkQueue.h"
 #include <mutex>
-#include <semaphore>
 #include <stdexcept>
 #include <thread>
 #include <vector>
@@ -134,12 +133,12 @@ private:
 			exec("BEGIN TRANSACTION;");
 
 			auto& work = *buffer;
-			for (auto& item : work)
+			for (auto&[hash, cpr] : work)
 			{
 				// The item hash has lifetime until the cache is cleared, so we can use SQLITE_STATIC to avoid
 				// the memory copying SQLITE_TRANSIENT does.
-				sqlite3_bind_blob(insert_stmt.get(), 1, item.first.getHash(), item.first.hashlength, SQLITE_STATIC);
-				sqlite3_bind_int(insert_stmt.get(), 2, item.second);
+				sqlite3_bind_blob(insert_stmt.get(), 1, hash.getHash(), hash.hashlength, SQLITE_STATIC);
+				sqlite3_bind_int(insert_stmt.get(), 2, cpr);
 
 				if ( SQLITE_DONE != sqlite3_step(insert_stmt.get()) )
 				{

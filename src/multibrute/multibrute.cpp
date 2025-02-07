@@ -24,7 +24,7 @@ struct threadparam_t
 	int			threadnum;
 };
 
-static void bruteforce(const threadparam_t param)
+static void bruteforce(const threadparam_t& param)
 {
 	cout << "Thread " << param.threadnum << 
 			": scanning for hash " << param.targetHash->toString() 	<< 
@@ -85,8 +85,8 @@ int main(int argc, char *argv[])
 
 static vector<thread> createAndLaunchWorkers(uint8_t numThreads, const Hash& targetHash)
 {
-	const uint32_t keyspace = 1000000;
-	const uint32_t slicesize = static_cast<unsigned>( ceil(static_cast<double>(keyspace) / numThreads) );
+	constexpr uint32_t keyspace = 1'000'000;
+	const auto slicesize = static_cast<unsigned>( ceil(static_cast<double>(keyspace) / numThreads) );
 
 	vector<thread> workers;
 	for(uint8_t t=0; t<numThreads; ++t)

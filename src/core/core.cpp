@@ -241,7 +241,7 @@ typedef std::array<char[4], days_per_year> lookup_t;									// (day,month) -> D
 static lookup_t generateDayMonthLookupTable();
 static const lookup_t g_dayMonthLookup = generateDayMonthLookupTable();
 
-void runpermutations(uint32_t start, uint32_t len, bool exhaustive, std::function<bool(const char*)> func)
+void runpermutations(uint32_t start, uint32_t len, bool exhaustive, const std::function<bool(const char*)>& func)
 {
 	char cpr[11] = {};	// DDMMYYXXXX + NUL byte
 
