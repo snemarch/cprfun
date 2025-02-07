@@ -55,7 +55,7 @@ public:
 
 	void putHash(const Hash& hash, const std::string& cpr)
 	{
-		workQueue.produce(std::make_pair(hash, stoul(cpr)));
+		workQueue.produce(hash, stoul(cpr));
 	}
 
 	bool tryGet(const Hash& hash, std::string *cpr)

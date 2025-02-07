@@ -23,8 +23,9 @@ public:
 	}
 
 	// Producer adds a single item and flushes when the chunk is full
-	void produce(const T& item) {
-		buffers[Buffers::FRONT]->push_back(item);
+	template <typename... Args>
+	void produce(Args&&... args) {
+		buffers[Buffers::FRONT]->emplace_back(std::forward<Args>(args)...);
 
 		if (buffers[Buffers::FRONT]->size() >= chunkSize) {
 			flush();
