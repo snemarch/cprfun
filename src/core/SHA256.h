@@ -23,7 +23,7 @@ public:
 	void update(const void *buffer, size_t length);
 	void digest(digest_t& digest);
 
-private:
+protected:
 	std::unique_ptr<hash_state> state;
 };
 
