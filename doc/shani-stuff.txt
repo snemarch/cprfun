@@ -1,0 +1,28 @@
+Eh, hvilket library var det jeg kiggede på her?
+
+CalculateDigest:
+	Update(input, lenght)
+		- mindre end blocksize, kopierer "input" til "data" (member)
+
+	Final(digest)
+		TruncatedFinal
+			IteratedHashBase::TruncatedFinal
+				Endian: big
+				PadLastBlock
+				Sæt sidste to... u32? i block til conditionalbytereverse stuff af... bitcount?
+				HashBlock
+					SHA256::HashMultipleBlocks(data, 64) // 64==blocksize
+						SHA256_HashMultipleBlocks_SHANI(state, input, length, BIG_ENDIAN_ORDER)
+				ConditionalByteReverse(...) // IsAligned true branch versionen
+					Kalder _byteswap_ulong på samtlige words
+
+
+
+
+void SHA256::InitState(HashWordType *state)
+{
+    static const word32 s[8] = {
+        0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+        0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
+    memcpy(state, s, sizeof(s));
+}

@@ -21,7 +21,7 @@ public:
 	void update(const void *buffer, size_t length);
 	void digest(digest_t& digest);
 
-private:
+protected:
 	hash_state *state;
 };
 
