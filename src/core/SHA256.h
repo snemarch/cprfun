@@ -2,8 +2,9 @@
 #ifndef cprfun__sha256_h
 #define cprfun__sha256_h
 
-#include <cstdint>
 #include <array>
+#include <cstdint>
+#include <memory>
 
 namespace cprfun
 {
@@ -18,11 +19,12 @@ public:
 	sha256();
 	~sha256();
 
+	void reset();
 	void update(const void *buffer, size_t length);
 	void digest(digest_t& digest);
 
 private:
-	hash_state *state;
+	std::unique_ptr<hash_state> state;
 };
 
 }

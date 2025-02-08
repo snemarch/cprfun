@@ -1,5 +1,21 @@
 Project benchmarks, reverse chronological order.
 
+2025-02-08: re-use sha256 object to avoid new/delete in the inner loop, d'oh.
+	perf bruteforce --benchmark: Runtime 3634ms, 5035773 hashops/sec
+		Elapsed time   : 3.64
+		Kernel time    : 0.02 (0.4%)
+		User time      : 3.63 (99.6%)
+
+	perf multibrute.exe 32 7c1bb9f1d19393fdbcb04537a679d661180f31166b8ecb21135711c84883914e
+		Elapsed time   : 4.10
+		Kernel time    : 0.84 (20.6%)
+		User time      : 126.66 (3087.9%)
+
+	perf bruteforce.exe 7c1bb9f1d19393fdbcb04537a679d661180f31166b8ecb21135711c84883914e
+		Elapsed time   : 72.70
+		Kernel time    : 0.14 (0.2%)
+		User time      : 72.41 (99.6%)
+
 
 2022-01-27: Moving from Ryzen5-1600 to Ryzen9-7950x – 1st to 5th gen Zen, 6/12 to 16/32 cores/threads.
 

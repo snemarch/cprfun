@@ -149,6 +149,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LargeAddressAware>true</LargeAddressAware>
       <SetChecksum>true</SetChecksum>
+      <Profile>false</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -173,6 +174,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LargeAddressAware>true</LargeAddressAware>
       <SetChecksum>true</SetChecksum>
+      <Profile>false</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

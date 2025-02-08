@@ -374,26 +374,27 @@ hash_copy(hash_state *src, hash_state *dest)
 //cprfun: public interface methods - might seem silly to do it this way rather
 //than replace the hash_* above, but this way we make as few changes to the
 //original code as possible.
-sha256::sha256() : state(new hash_state)
+sha256::sha256() : state(std::make_unique<hash_state>())
 {
-	hash_init(state);
+	hash_init(state.get());
 }
 
-sha256::~sha256()
-{
-	delete state;
+sha256::~sha256() = default;
+
+void sha256::reset() {
+	hash_init(state.get());
 }
 
 void sha256::update(const void *buf, size_t length)
 {
-	hash_update(state, const_cast<U8*>(static_cast<const U8*>(buf)), length);
+	hash_update(state.get(), const_cast<U8*>(static_cast<const U8*>(buf)), length);
 }
 
 void sha256::digest(digest_t& digest)
 {
 	hash_state temp;
 
-	hash_copy(state, &temp);
+	hash_copy(state.get(), &temp);
 	sha_done(&temp, &digest[0]);
 }
 

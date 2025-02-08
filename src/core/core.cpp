@@ -19,6 +19,12 @@ Hash::Hash()
 	hash.fill(0);
 }
 
+Hash::Hash(sha256& sha, const void* data, size_t length) {
+	sha.reset();
+	sha.update(data, length);
+	sha.digest(hash);
+}
+
 Hash::Hash(const void *data, size_t length)
 {
 	sha256 sha;

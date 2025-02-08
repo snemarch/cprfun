@@ -17,18 +17,20 @@ static void hs_create(const std::string& hsfilename)
 	unsigned iterations = 0;
 	StopWatch timer;
 	timer.start();
-	//runpermutations(0, ( 10'000), true, [&](const char *cpr) -> bool {		// suitable for profiling run
-	runpermutations(0, (1'000'000), true, [&](const char *cpr) -> bool {
+	sha256 sha;
+	//runpermutations(0, 10'000, true, [&](const char *cpr) -> bool {		// suitable for profiling run
+	runpermutations(0, 1'000'000, true, [&](const char *cpr) -> bool {
 		if( (iterations++ % 366000) == 0 )
 		{
-			cout << "reached " << cpr << " (" << fixed << setprecision(3) << ((iterations*100.0)/360000000.0) << "% done)" << endl;
+			cout << "\rreached " << cpr << " (" << fixed << setprecision(3) << ((iterations*100.0)/360000000.0) << "% done)" << flush;
 		}
 
-		Hash currentHash(cpr, 10);
-		store.put(currentHash, cpr);
+		store.put(Hash(sha, cpr, 10), cpr);
 		return false; // keep on truckin'
 	});
 	timer.stop();
+
+	cout << endl;
 	cout << "done! - " << timer.getMilli() << "ms" << endl;
 	cout << "build index - this will also take a while..." << endl;
 

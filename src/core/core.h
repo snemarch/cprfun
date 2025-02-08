@@ -8,6 +8,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include "SHA256.h"
 
 namespace cprfun {
 
@@ -20,6 +21,7 @@ public:
 	static const size_t hashlength = 256/8;
 
 	Hash();
+	Hash(sha256& sha, const void* data, size_t length);
 	Hash(const void *data, size_t length);
 	Hash(const Hash& other);
 

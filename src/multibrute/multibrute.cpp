@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <core/core.h>
+#include <core/SHA256.h>
 
 // hash(3112999999) => 7c1bb9f1d19393fdbcb04537a679d661180f31166b8ecb21135711c84883914e	// full keyspace
 // hash(3112009999) => b200598b0dcc2848b488c70bb3d8261702977ded093fd82ecf9911bf3852e077	// small search, early-out
@@ -18,7 +19,7 @@ atomic<bool> g_stopSearching(false);
 
 struct threadparam_t 
 {
-	const Hash	*targetHash;
+	const Hash&	targetHash;
 	uint32_t	start;
 	uint32_t	count;
 	int			threadnum;
@@ -27,12 +28,12 @@ struct threadparam_t
 static void bruteforce(const threadparam_t& param)
 {
 	cout << "Thread " << param.threadnum << 
-			": scanning for hash " << param.targetHash->toString() 	<< 
+			": scanning for hash " << param.targetHash.toString() 	<< 
 			", range " << param.start << "-" << (param.start + param.count) << endl;
 
-	runpermutations(param.start, param.count, false, [=](const char *cpr) -> bool {
-		Hash currentHash(cpr, 10);
-		if(currentHash == *param.targetHash)
+	sha256 sha;
+	runpermutations(param.start, param.count, false, [&](const char *cpr) -> bool {
+		if(const Hash currentHash(sha, cpr, 10); currentHash == param.targetHash)
 		{
 			cout << "Thread " << param.threadnum << ": got a match! CPR == " << cpr << endl;
 			g_stopSearching = true;
@@ -91,12 +92,12 @@ static vector<thread> createAndLaunchWorkers(uint8_t numThreads, const Hash& tar
 	vector<thread> workers;
 	for(uint8_t t=0; t<numThreads; ++t)
 	{
-		threadparam_t param;
-
-		param.start = t * slicesize;
-		param.count = min( slicesize, (keyspace - param.start) );
-		param.targetHash = &targetHash;
-		param.threadnum = t;
+		threadparam_t param{
+			.targetHash = targetHash,
+			.start = t * slicesize,
+			.count = min(slicesize, (keyspace - param.start)),
+			.threadnum = t
+		};
 
 		workers.push_back( thread(bruteforce, param) );
 	}

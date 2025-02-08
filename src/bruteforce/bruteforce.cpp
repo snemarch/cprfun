@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <core/core.h>
+#include <core/SHA256.h>
 
 using namespace cprfun;
 using namespace std;
@@ -23,10 +24,10 @@ void benchmark(uint32_t targetIterations)
 	StopWatch sw;
 	sw.start();
 	uint32_t numPermutations = 0;
+	sha256 sha;
 	runpermutations(0, targetIterations, true, [&](const char *cpr) -> bool {
 		++numPermutations;
-		Hash currentHash(cpr, 10);
-		if(currentHash == targetHash)
+		if(const Hash currentHash(sha, cpr, 10); currentHash == targetHash)
 		{
 			cout << "After " << numPermutations << " iterations: found cpr [" <<
 					cpr << "] with hash [" << currentHash.toString() << "]" << endl;
@@ -45,16 +46,16 @@ void bruteforce(const Hash& targetHash)
 	cout << "Scanning for hash " << targetHash.toString() << endl;
 	
 	unsigned iterations = 0;
-	runpermutations(0, (100*10000) - 1, true, [&](const char *cpr) -> bool {
+	sha256 sha;
+	runpermutations(0, 1'000'000, true, [&](const char *cpr) -> bool {
 		if( (iterations++ % 3660000) == 0 )
 		{
-			cout << "reached " << cpr << endl;
+			cout << "\rreached " << cpr << flush;
 		}
 
-		Hash currentHash(cpr, 10);
-		if(currentHash == targetHash)
+		if(const Hash currentHash(sha, cpr, 10); currentHash == targetHash)
 		{
-			cout << "Got a match! CPR == " << cpr << endl;
+			cout << endl << "Got a match! CPR == " << cpr << endl;
 			return true;
 		}
 		return false;

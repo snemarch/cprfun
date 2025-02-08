@@ -57,8 +57,9 @@ Rerun, fix worker-hang				91438ms (1.54min) burst,	112555ms (1.88min) index. Thi
 Refactor code to WorkQueue.h		89554ms (1.49min) burst,	97776ms (1.62min) index
 Naive emplace_back					88163ms (1.47min) burst,	82686ms (1.38min) index
 Perfect-forward						89139ms (1.49min) burst,	65570ms (1.09min) index. Why so fast indexing? Was it because of the sync.exe before the run?!
+MacBook Air M2						170953ms (2.85min) burst,   326457ms (5.44min) index - not bad for first run on ARM.
+Hash/SHA256 alloc					119135ms (1.99min) burst,	103158ms (1.72min) index. What the hell, why this regression?!
 
-MacBook Air M2                      170953ms (2.85min) burst,   326457ms (5.44min) index - not bad for first run on ARM.
 
 2024-05-05
 ==========
