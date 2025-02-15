@@ -1,5 +1,6 @@
 https://stackoverflow.com/questions/20692386/are-there-in-x86-any-instructions-to-accelerate-sha-sha1-2-256-512-encoding
 https://stackoverflow.com/questions/5930056/generating-a-sha256-hash-with-crypto-using-a-string-as-input-and-output
+https://stackoverflow.com/questions/18546244/sha256-performance-optimization-in-c - ser ud til at have et par gode pointers
 https://learn.microsoft.com/en-us/cpp/assembler/masm/masm-for-x64-ml64-exe
 
 https://www.intel.com/content/dam/develop/external/us/en/documents/intel-sha-extensions-white-paper-402097.pdf
@@ -11,7 +12,16 @@ https://github.com/weidai11/cryptopp/issues/92
 https://github.com/weidai11/cryptopp
 https://github.com/minio/sha256-simd
 https://github.com/noloader/SHA-Intrinsics/blob/master/sha256-x86.c
+https://github.com/ckolivas/cgminer/blob/master/sha2.c - se om det er en bedre reference-implementation end nuværende
+https://github.com/voidxno/fast-recursive-sha256/ - ser MEGET relevant ud, single-file optimised for AES-NI og ARM
 
+Crypto++ var vist lidt convoluted?
 https://cryptopp.com/docs/ref/class_s_h_a256.html#details
 https://cryptopp.com/wiki/Main_Page
 https://cryptopp.com/#download
+
+DJB plejer at være interessant, udfra hans hash comparisons ser det ud til at crypto_hashblocks er "reference impl",
+og at den klarer sig godt.
+https://bench.cr.yp.to/results-hash.html
+https://bench.cr.yp.to/impl-hash/sha256.html
+https://www.post-apocalyptic-crypto.org/timecop/crypto_hashblocks/index.html
