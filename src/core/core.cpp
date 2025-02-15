@@ -249,11 +249,11 @@ static const lookup_t g_dayMonthLookup = generateDayMonthLookupTable();
 
 void runpermutations(uint32_t start, uint32_t len, bool exhaustive, const std::function<bool(const char*)>& func)
 {
-	char cpr[11] = {};	// DDMMYYXXXX + NUL byte
+	alignas(32) char cpr[11]  = {};	// DDMMYYXXXX + NUL byte
 
-	for(unsigned iter = start; iter < start+len; ++iter)
+	for(uint_fast32_t iter = start; iter < start+len; ++iter)
 	{
-		for(unsigned dayAndMonth=0; dayAndMonth<days_per_year; ++dayAndMonth)
+		for(uint_fast32_t dayAndMonth=0; dayAndMonth<days_per_year; ++dayAndMonth)
 		{
 			std::memcpy( &cpr[0], g_dayMonthLookup[dayAndMonth], sizeof(g_dayMonthLookup[0]) );	// first four chars: DDMM
 			base10fixWidthStr<6>(&cpr[4], iter);											// then follows the [0-999999]
@@ -267,9 +267,9 @@ void runpermutations(uint32_t start, uint32_t len, bool exhaustive, const std::f
 
 static lookup_t generateDayMonthLookupTable()
 {
-	static const std::array<unsigned, 12> days_per_month = {{ 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }};
+	static const std::array<unsigned, 12> days_per_month { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 	
-	lookup_t result = {{{ 0 }}};	// GCC 4.7.2 wants all those brackets... does the standard require those?
+	lookup_t result { 0 };
 	// Initialize 'result' to avoid (spurious, since we fill it completely below?) analyzer warning about using it
 	// uninitialized at the return statement. Speed hit is negligible anyway, especially since this is one-time init.
 

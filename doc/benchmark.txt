@@ -1,5 +1,25 @@
 Project benchmarks, reverse chronological order.
 
+2025-02-16: alignment and memory layout fixes
+	perf bruteforce --benchmark: Runtime 3440ms, 5319767 hashops/sec
+         Elapsed time   : 3.44
+         Kernel time    : 0.00 (0.0%)
+         User time      : 3.44 (99.8%)
+
+	perf multibrute.exe 32 7c1bb9f1d19393fdbcb04537a679d661180f31166b8ecb21135711c84883914e
+        Elapsed time   : 3.67
+        Kernel time    : 0.75 (20.4%)
+        User time      : 110.52 (3008.2%)
+
+    perf bruteforce.exe 7c1bb9f1d19393fdbcb04537a679d661180f31166b8ecb21135711c84883914e
+        Elapsed time   : 70.95
+        Kernel time    : 0.09 (0.1%)
+        User time      : 70.70 (99.6%)
+
+	Air-M2 before alignment: Runtime 6485ms, 2821896 hashops/sec
+	Air-M2 after alignment:  Runtime 5382ms, 3400222 hashops/sec
+
+
 2025-02-08: re-use sha256 object to avoid new/delete in the inner loop, d'oh.
 	perf bruteforce --benchmark: Runtime 3634ms, 5035773 hashops/sec
 		Elapsed time   : 3.64

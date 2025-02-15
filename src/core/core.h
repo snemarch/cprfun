@@ -34,8 +34,7 @@ public:
 	static Hash fromHexString(const std::string& input);
 
 private:
-	std::array<std::uint8_t, hashlength> hash;
-
+	std::array<std::uint8_t, hashlength> hash alignas(32);
 };
 
 inline bool operator== (const Hash& lhs, const Hash& rhs)

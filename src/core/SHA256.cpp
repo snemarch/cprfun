@@ -143,17 +143,17 @@ typedef U32 sha2_word_t;
 #endif
 
 /* define the hash_state structure */
-struct hash_state {
-	sha2_word_t state[8];
-	int curlen;
+struct alignas(32) hash_state {
+	std::array<unsigned char, BLOCK_SIZE> buf;
+	std::array<sha2_word_t, 8> state;
+	uint_fast32_t curlen;
 	sha2_word_t length_upper, length_lower;
-	unsigned char buf[BLOCK_SIZE];
 };
 
 #endif /* __HASH_SHA2_H */
 
 /* Initial Values H */
-static const sha2_word_t H[8] = {
+static constexpr std::array<sha2_word_t, 8> H alignas(32) {
 	0x6a09e667,
 	0xbb67ae85,
 	0x3c6ef372,
@@ -165,7 +165,7 @@ static const sha2_word_t H[8] = {
 };
 
 /* the Constants K */
-static const sha2_word_t K[SCHEDULE_SIZE] = {
+static constexpr std::array<sha2_word_t, SCHEDULE_SIZE> K alignas(32) {
 	0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b,
 	0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01,
 	0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7,
@@ -290,13 +290,15 @@ static int add_length(hash_state *hs, sha2_word_t inc) {
 /* init the SHA state */
 static void sha_init(hash_state * hs)
 {
-	int i;
+	// The old manual loop compiled with VC++ caused the last state to be stored as a QWORD, to also zero one of the
+	// length state members - a too clever optimization, since that caused expensive misaligned write.
+	// It seems this is avoided using std::copy, and that performance between that and memcpy are about the same.
+	std::copy(std::begin(H), std::end(H), std::begin(hs->state));	// looks to be around the same as member-fun copy
+
 	hs->curlen = hs->length_upper = hs->length_lower = 0;
-	for (i = 0; i < 8; ++i)
-		hs->state[i] = H[i];
 }
 
-static void sha_process(hash_state * hs, unsigned char *buf, int len)
+static void sha_process(hash_state * hs, const U8 *buf, int len)
 {
 	while (len--) {
 		/* copy byte */
@@ -361,14 +363,14 @@ static void hash_init (hash_state *ptr)
 static void
 hash_update (hash_state *self, const U8 *buf, int len)
 {
-	sha_process(self,(unsigned char *)buf, len);
+	sha_process(self, buf, len);
 }
 
 // Done
 static void
 hash_copy(hash_state *src, hash_state *dest)
 {
-	memcpy(dest,src,sizeof(hash_state));
+	*dest = *src;
 }
 
 //cprfun: public interface methods - might seem silly to do it this way rather
@@ -387,7 +389,7 @@ void sha256::reset() {
 
 void sha256::update(const void *buf, size_t length)
 {
-	hash_update(state.get(), const_cast<U8*>(static_cast<const U8*>(buf)), length);
+	hash_update(state.get(), static_cast<const U8*>(buf), length);
 }
 
 void sha256::digest(digest_t& digest)
