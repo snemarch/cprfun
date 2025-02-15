@@ -200,7 +200,7 @@ HashStore HashStore::createNew(const std::string& filename)
 	result.impl->exec("PRAGMA threads = 16;");
 	result.impl->exec("PRAGMA page_size = 32768;");
 	result.impl->exec("PRAGMA locking_mode=EXCLUSIVE"); // avoid constant acquire/release of file lock
-	result.impl->exec("PRAGMA cache_size = -1024;");	// 1gig cache - not even 100meg used during insert or index creation, this is more than fine.
+	result.impl->exec("PRAGMA cache_size = -102400;");	// 1gig cache - not even 100meg used during insert or index creation, this is more than fine.
 	//result.impl->exec("PRAGMA temp_store=MEMORY;");	// requires ~22.5gig process memory, seems to disable threading during index creation.
 
 	return result;

@@ -144,7 +144,7 @@ typedef U32 sha2_word_t;
 
 /* define the hash_state structure */
 struct alignas(32) hash_state {
-	std::array<unsigned char, BLOCK_SIZE> buf;
+	std::array<U8, BLOCK_SIZE> buf;
 	std::array<sha2_word_t, 8> state;
 	uint_fast32_t curlen;
 	sha2_word_t length_upper, length_lower;
@@ -223,15 +223,13 @@ static constexpr std::array<sha2_word_t, SCHEDULE_SIZE> K alignas(32) {
 /* compress one block  */
 static void sha_compress(hash_state * hs)
 {
-	sha2_word_t S[8], W[SCHEDULE_SIZE], T1, T2;
-	int i;
-
-	/* copy state into S */
-	for (i = 0; i < 8; i++)
-		S[i] = hs->state[i];
+	// Converting W to std::array has noticable performance drop on MSVC 19.42.34438.
+	sha2_word_t W[SCHEDULE_SIZE] alignas(32);
+	std::array<sha2_word_t, 8> S alignas(32) { hs->state };
+	sha2_word_t T1, T2;
 
 	/* copy the state into W[0..15] */
-	for (i = 0; i < 16; i++){
+	for (auto i = 0; i < 16; i++){
 		W[i] = (
 			(((sha2_word_t) hs->buf[(WORD_SIZE*i)+0]) << (WORD_SIZE_BITS- 8)) |
 			(((sha2_word_t) hs->buf[(WORD_SIZE*i)+1]) << (WORD_SIZE_BITS-16)) |
@@ -248,11 +246,11 @@ static void sha_compress(hash_state * hs)
 	}    
 
 	/* fill W[16..SCHEDULE_SIZE] */
-	for (i = 16; i < SCHEDULE_SIZE; i++)
+	for (auto i = 16; i < SCHEDULE_SIZE; i++)
 		W[i] = Gamma1(W[i - 2]) + W[i - 7] + Gamma0(W[i - 15]) + W[i - 16];
 
 	/* Compress */
-	for (i = 0; i < SCHEDULE_SIZE; i++) {
+	for (auto i = 0; i < SCHEDULE_SIZE; i++) {
 		T1 = S[7] + Sigma1(S[4]) + Ch(S[4], S[5], S[6]) + K[i] + W[i];
 		T2 = Sigma0(S[0]) + Maj(S[0], S[1], S[2]);
 		S[7] = S[6];
@@ -266,7 +264,7 @@ static void sha_compress(hash_state * hs)
 	}
 
 	/* feedback */
-	for (i = 0; i < 8; i++)
+	for (auto i = 0; i < 8; i++)
 		hs->state[i] += S[i];
 }
 
@@ -292,8 +290,9 @@ static void sha_init(hash_state * hs)
 {
 	// The old manual loop compiled with VC++ caused the last state to be stored as a QWORD, to also zero one of the
 	// length state members - a too clever optimization, since that caused expensive misaligned write.
-	// It seems this is avoided using std::copy, and that performance between that and memcpy are about the same.
-	std::copy(std::begin(H), std::end(H), std::begin(hs->state));	// looks to be around the same as member-fun copy
+	// Using std::copy produces a nice memmove, but now that we have a std::array, this simple assignment can boil
+	// down to two vmovups instructions on x64 with AVX.
+	hs->state = H;
 
 	hs->curlen = hs->length_upper = hs->length_lower = 0;
 }
@@ -315,8 +314,6 @@ static void sha_process(hash_state * hs, const U8 *buf, int len)
 
 static void sha_done(hash_state * hs, unsigned char *hash)
 {
-	int i;
-
 	/* increase the length of the message */
 	add_length(hs, hs->curlen * 8);
 
@@ -339,36 +336,32 @@ static void sha_done(hash_state * hs, unsigned char *hash)
 		hs->buf[hs->curlen++] = 0;
 
 	/* append length */
-	for (i = 0; i < WORD_SIZE; i++)
+	for (auto i = 0; i < WORD_SIZE; i++)
 		hs->buf[i + LAST_BLOCK_SIZE] = 
 			(hs->length_upper >> ((WORD_SIZE - 1 - i) * 8)) & 0xFF;
-	for (i = 0; i < WORD_SIZE; i++)
+
+	for (auto i = 0; i < WORD_SIZE; i++)
 		hs->buf[i + LAST_BLOCK_SIZE + WORD_SIZE] = 
 			(hs->length_lower >> ((WORD_SIZE - 1 - i) * 8)) & 0xFF;
 	sha_compress(hs);
 
 	/* copy output */
-	for (i = 0; i < DIGEST_SIZE; i++)
+	for (auto i = 0; i < DIGEST_SIZE; i++)
 		hash[i] = (hs->state[i / WORD_SIZE] >> 
 				   ((WORD_SIZE - 1 - (i % WORD_SIZE)) * 8)) & 0xFF;
 }
 
-// Done
-static void hash_init (hash_state *ptr)
+static void hash_init(hash_state *ptr)
 {
 	sha_init(ptr);
 }
 
-// Done
-static void
-hash_update (hash_state *self, const U8 *buf, int len)
+static void hash_update(hash_state * self, const U8 * buf, int len)
 {
 	sha_process(self, buf, len);
 }
 
-// Done
-static void
-hash_copy(hash_state *src, hash_state *dest)
+static void hash_copy(hash_state *src, hash_state *dest)
 {
 	*dest = *src;
 }

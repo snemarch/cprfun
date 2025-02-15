@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <cctype>
 #include <chrono>
 #include <cstring>
 #include <functional>
@@ -13,11 +12,6 @@
 
 
 namespace cprfun {
-
-Hash::Hash()
-{
-	hash.fill(0);
-}
 
 Hash::Hash(sha256& sha, const void* data, size_t length) {
 	sha.reset();
@@ -45,7 +39,6 @@ void Hash::assign(const Hash& other)
 
 bool Hash::equals(const Hash& other) const
 {
-	//TODO: examine if there's anything to gain from a memcmp or manual native-integer-size based compare.
 	return hash == other.hash;
 }
 
@@ -86,7 +79,7 @@ static int fromHexNibble(char nibble)
 
 Hash Hash::fromHexString(const std::string& input)
 {
-	std::array<uint8_t, hashlength> blob = {{ 0 }};
+	std::array<uint8_t, hashlength> blob { 0 };
 
 	if(input.length() != hashlength*2)
 	{
@@ -244,12 +237,12 @@ std::string StopWatch::getFriendly() const
 
 // lookup table defs and helper function forward declaration.
 typedef std::array<char[4], days_per_year> lookup_t;									// (day,month) -> DDMM chars (not string, no NUL!)
-static lookup_t generateDayMonthLookupTable();
+static constexpr lookup_t generateDayMonthLookupTable();
 static const lookup_t g_dayMonthLookup = generateDayMonthLookupTable();
 
 void runpermutations(uint32_t start, uint32_t len, bool exhaustive, const std::function<bool(const char*)>& func)
 {
-	alignas(32) char cpr[11]  = {};	// DDMMYYXXXX + NUL byte
+	alignas(32) char cpr[11] {}; // DDMMYYXXXX + NUL byte
 
 	for(uint_fast32_t iter = start; iter < start+len; ++iter)
 	{
@@ -265,15 +258,14 @@ void runpermutations(uint32_t start, uint32_t len, bool exhaustive, const std::f
 	}
 }
 
-static lookup_t generateDayMonthLookupTable()
+static constexpr lookup_t generateDayMonthLookupTable()
 {
-	static const std::array<unsigned, 12> days_per_month { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+	constexpr std::array<unsigned, 12> days_per_month { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 	
 	lookup_t result { 0 };
 	// Initialize 'result' to avoid (spurious, since we fill it completely below?) analyzer warning about using it
 	// uninitialized at the return statement. Speed hit is negligible anyway, especially since this is one-time init.
 
-	char buf[4];
 	unsigned index = 0;
 	for(unsigned month=0; month<days_per_month.size(); ++month)
 	{
@@ -281,9 +273,10 @@ static lookup_t generateDayMonthLookupTable()
 		{
 			assert(index < days_per_year);
 
-			base10fixWidthStr<2>(&buf[0], day + 1);
-			base10fixWidthStr<2>(&buf[2], month + 1);
-			memcpy( &result[index++], buf, sizeof(result[index]) );
+			base10fixWidthStr<2>(&result[index][0], day + 1);
+			base10fixWidthStr<2>(&result[index][2], month + 1);
+
+			index++;
 		}
 	}
 
