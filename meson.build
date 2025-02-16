@@ -1,14 +1,16 @@
-project('cprfun', ['cpp', 'c'],
+project('cprfun', ['cpp', 'c'], version: '1.0.0',
 	default_options: [
 		'cpp_std=c++20',
 		'default_library=static'
 	],
+	meson_version: '>=1.1.0'
 )
 
-root_inc = include_directories('src')
+if get_option('feat_libsodium').enabled()
+	add_project_arguments('-DFEAT_LIBSODIUM', language: ['c', 'cpp'])
+endif
 
-bindir = 'bin'
-objdir = 'obj'
+root_inc = include_directories('src')
 
 subdir('src/core')
 subdir('src/calchash')

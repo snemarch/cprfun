@@ -1,0 +1,1 @@
+option('feat_libsodium', type : 'feature', value : 'enabled', description: 'Use libsodium SHA256 implementation')

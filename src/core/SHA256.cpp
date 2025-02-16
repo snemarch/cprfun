@@ -3,6 +3,11 @@
 
 #include <pycrypto_SHA256.h>
 
+#if FEAT_LIBSODIUM
+#include "sodium.h"
+#endif
+
+
 namespace cprfun
 {
 
