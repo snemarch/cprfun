@@ -3,13 +3,12 @@
 #define cprfun__sha256_h
 
 #include <array>
-#include <cstdint>
 #include <memory>
 
 namespace cprfun
 {
 
-struct hash_state;
+namespace pycrypto { struct hash_state; }
 
 class sha256 {
 public:
@@ -24,7 +23,7 @@ public:
 	void digest(digest_t& digest);
 
 private:
-	std::unique_ptr<hash_state> state;
+	std::unique_ptr<pycrypto::hash_state> state;
 };
 
 }
