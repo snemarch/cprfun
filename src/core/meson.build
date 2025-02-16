@@ -1,5 +1,5 @@
 core_lib = library('core',
-  sources: ['stdafx.cpp', 'core.cpp', 'SHA256.cpp', 'pycrypto_SHA256.cpp'],
+  sources: ['stdafx.cpp', 'core.cpp', 'SHA256PyCrypto.cpp', 'SHA256Sodium.cpp'],
   dependencies: [
 	  dependency('libsodium', method: 'pkg-config', required: get_option('feat_libsodium'))
   ],

@@ -9,7 +9,7 @@
 using namespace cprfun;
 using namespace std;
 
-static void hs_create(const std::string& hsfilename)
+static void hs_create(sha256 *sha, const std::string& hsfilename)
 {
 	cout << "Creating hashstore - this will take a while..." << endl;
 
@@ -17,7 +17,6 @@ static void hs_create(const std::string& hsfilename)
 	unsigned iterations = 0;
 	StopWatch timer;
 	timer.start();
-	sha256 sha;
 	//runpermutations(0, 10'000, true, [&](const char *cpr) -> bool {		// suitable for profiling run
 	runpermutations(0, 1'000'000, true, [&](const char *cpr) -> bool {
 		if( (iterations++ % 366000) == 0 )
@@ -25,7 +24,7 @@ static void hs_create(const std::string& hsfilename)
 			cout << "\rreached " << cpr << " (" << fixed << setprecision(3) << ((iterations*100.0)/360000000.0) << "% done)" << flush;
 		}
 
-		store.put(Hash(sha, cpr, 10), cpr);
+		store.put(Hash(*sha, cpr, 10), cpr);
 		return false; // keep on truckin'
 	});
 	timer.stop();
@@ -58,6 +57,8 @@ static void hs_lookup(const std::string& hsfilename, const std::string& hashstr)
 
 int main(int argc, char* argv[])
 {
+	const Core core;
+
 	if(argc < 3)
 	{
 		cout << "Usage: dbtool [path/to/hashstore.db] [hashvalue] to lookup hashvalue in hashstore," << endl <<
@@ -69,7 +70,7 @@ int main(int argc, char* argv[])
 	{
 		if (string(argv[1]) == "--create")
 		{
-			hs_create(argv[2]);
+			hs_create(core.hasher(), argv[2]);
 		}
 		else
 		{

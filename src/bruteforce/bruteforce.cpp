@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include <cstring>
 #include <cstdint>
 #include <iostream>
 
@@ -9,7 +8,7 @@
 using namespace cprfun;
 using namespace std;
 
-void benchmark(uint32_t targetIterations)
+void benchmark(sha256 *sha, uint32_t targetIterations)
 {
 	char cprStrInput[10+1] = "3112";
 	base10fixWidthStr<6>(&cprStrInput[4], targetIterations - 1);
@@ -24,10 +23,9 @@ void benchmark(uint32_t targetIterations)
 	StopWatch sw;
 	sw.start();
 	uint32_t numPermutations = 0;
-	sha256 sha;
 	runpermutations(0, targetIterations, true, [&](const char *cpr) -> bool {
 		++numPermutations;
-		if(const Hash currentHash(sha, cpr, 10); currentHash == targetHash)
+		if(const Hash currentHash(*sha, cpr, 10); currentHash == targetHash)
 		{
 			cout << "After " << numPermutations << " iterations: found cpr [" <<
 					cpr << "] with hash [" << currentHash.toString() << "]" << endl;
@@ -41,19 +39,18 @@ void benchmark(uint32_t targetIterations)
 	cout << "Runtime " << sw.getMilli() << "ms, " << (static_cast<uint64_t>(numPermutations)*1000)/sw.getMilli() << " hashops/sec" << endl;
 }
 
-void bruteforce(const Hash& targetHash)
+void bruteforce(sha256 *sha, const Hash& targetHash)
 {
 	cout << "Scanning for hash " << targetHash.toString() << endl;
 	
 	unsigned iterations = 0;
-	sha256 sha;
 	runpermutations(0, 1'000'000, true, [&](const char *cpr) -> bool {
 		if( (iterations++ % 3660000) == 0 )
 		{
 			cout << "\rreached " << cpr << flush;
 		}
 
-		if(const Hash currentHash(sha, cpr, 10); currentHash == targetHash)
+		if(const Hash currentHash(*sha, cpr, 10); currentHash == targetHash)
 		{
 			cout << endl << "Got a match! CPR == " << cpr << endl;
 			return true;
@@ -64,6 +61,8 @@ void bruteforce(const Hash& targetHash)
 
 int main(int argc, char* argv[])
 {
+	const Core core;
+
 	if(argc < 2)
 	{
 		cout << "bruteforce [sha256-hash] - tries to find a CPR number that matches your hash" << endl <<
@@ -72,12 +71,12 @@ int main(int argc, char* argv[])
 	}
 
 	if( string(argv[1]) == "--benchmark" ) {
-		benchmark(50'000);
+		benchmark(core.hasher(), 50'000);
 	} else {
 		try
 		{
 			Hash targetHash = Hash::fromHexString(argv[1]);
-			bruteforce(targetHash);
+			bruteforce(core.hasher(), targetHash);
 		}
 		catch(const runtime_error &e)
 		{

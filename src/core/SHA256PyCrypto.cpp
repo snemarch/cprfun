@@ -1,5 +1,6 @@
 #include "stdafx.h"
-#include "pycrypto_SHA256.h"
+#include "SHA256.h"
+#include "SHA256PyCrypto.h"
 
 /*
  * CprFun Note: this file is from PyCrypto - http://www.pycrypto.org . Their
@@ -44,32 +45,84 @@
  *
  */
 
-namespace cprfun::pycrypto
-{
-/*
- * An generic header for the SHA-2 hash family.
- *
- * Written in 2010 by Lorenz Quack <don@amberfisharts.com>
- *
- * ===================================================================
- * The contents of this file are dedicated to the public domain.  To
- * the extent that dedication to the public domain is not available,
- * everyone is granted a worldwide, perpetual, royalty-free,
- * non-exclusive license to exercise all rights associated with the
- * contents of this file for any purpose whatsoever.
- * No rights are reserved.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- * ===================================================================
- *
- */
+
+#define DIGEST_SIZE (256/8)
+#define BLOCK_SIZE (512/8)
+#define WORD_SIZE 4
+#define SCHEDULE_SIZE 64
+
+#ifndef DIGEST_SIZE
+#error SHA2 Implementation must define DIGEST_SIZE before including this header
+#else
+#define DIGEST_SIZE_BITS (DIGEST_SIZE*8)
+#endif
+
+#ifndef BLOCK_SIZE
+#error SHA2 Implementation must define BLOCK_SIZE before including this header
+#else
+#define BLOCK_SIZE_BITS (BLOCK_SIZE*8)
+#endif
+
+#ifndef WORD_SIZE
+#error SHA2 Implementation must define WORD_SIZE before including this header
+#else
+#if ((WORD_SIZE != 4) && (WORD_SIZE != 8))
+#error WORD_SIZE must be either 4 or 8
+#else
+#define WORD_SIZE_BITS (WORD_SIZE*8)
+#endif
+#endif
+
+#ifndef SCHEDULE_SIZE
+#error SHA2 Implementation must define SCHEDULE_SIZE before including this header
+#endif
+
+/* define some helper macros */
+#define PADDING_SIZE (2 * WORD_SIZE)
+#define LAST_BLOCK_SIZE (BLOCK_SIZE - PADDING_SIZE)
+
+/* define generic SHA-2 family functions */
+#define Ch(x,y,z)   ((x & y) ^ (~x & z))
+#define Maj(x,y,z)  ((x & y) ^ (x & z) ^ (y & z))
+#define ROTR(x, n)  (((x)>>((n)&(WORD_SIZE_BITS-1)))|((x)<<(WORD_SIZE_BITS-((n)&(WORD_SIZE_BITS-1)))))
+#define SHR(x, n)   ((x)>>(n))
+
+/* determine fixed size types */
+#if defined(_MSC_VER)
+	typedef unsigned char		U8;
+typedef unsigned __int64	U64;
+typedef unsigned int		U32;
+#elif defined(__sun) || defined(__sun__)
+#include <sys/inttypes.h>
+typedef uint8_t				U8;
+typedef uint32_t			U32;
+typedef uint64_t			U64;
+#else
+#include <stdint.h>
+typedef uint8_t				U8;
+typedef uint32_t			U32;
+typedef uint64_t			U64;
+#endif
+
+/* typedef a sha2_word_t type of appropriate size */
+#if (WORD_SIZE_BITS == 64)
+typedef U64 sha2_word_t;
+#elif (WORD_SIZE_BITS == 32)
+typedef U32 sha2_word_t;
+#else
+#error According to the FIPS Standard WORD_SIZE_BITS must be either 32 or 64
+#endif
+
+
+namespace cprfun::PyCrypto {
+
+/* define the hash_state structure */
+struct alignas(32) hash_state {
+	std::array<U8, BLOCK_SIZE> buf;
+	std::array<sha2_word_t, 8> state;
+	uint_fast32_t curlen;
+	sha2_word_t length_upper, length_lower;
+};
 
 /* Initial Values H */
 static constexpr std::array<sha2_word_t, 8> H alignas(32) {
@@ -267,6 +320,26 @@ void sha_done(hash_state * hs, unsigned char *hash)
 	for (auto i = 0; i < DIGEST_SIZE; i++)
 		hash[i] = (hs->state[i / WORD_SIZE] >>
 				   ((WORD_SIZE - 1 - (i % WORD_SIZE)) * 8)) & 0xFF;
+}
+
+SHA256PyCrypto::SHA256PyCrypto() : state(std::make_unique<hash_state>())
+{
+	sha_init(state.get());
+}
+
+SHA256PyCrypto::~SHA256PyCrypto() = default;
+
+void SHA256PyCrypto::reset() {
+	sha_init(state.get());
+}
+
+void SHA256PyCrypto::update(const void *buf, size_t length) {
+	sha_process(state.get(), static_cast<const U8*>(buf), length);;
+}
+
+void SHA256PyCrypto::digest(digest_t& digest) {
+	hash_state temp { *state };
+	sha_done(&temp, &digest[0]);
 }
 
 } // namespace cprfun

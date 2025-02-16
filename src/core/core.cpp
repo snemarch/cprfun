@@ -5,13 +5,51 @@
 #include <chrono>
 #include <cstring>
 #include <functional>
+#include <iostream>
 #include <stdexcept>
 
 #include "core.h"
-#include "SHA256.h"
 
+#include "SHA256.h"
+#include "SHA256PyCrypto.h"
+
+#ifdef FEAT_LIBSODIUM
+#include "SHA256Sodium.h"
+#endif
 
 namespace cprfun {
+
+struct NamedHashCreator {
+	using Creator = std::function<sha256*()>;
+	NamedHashCreator(std::string&& name, Creator&& creator) : name(std::move(name)), creator(std::move(creator)) {
+	}
+
+	std::string name;
+	Creator creator;
+};
+
+struct Core::Impl {
+	std::vector<NamedHashCreator> hashers;
+};
+
+Core::Core() : impl(std::make_unique<Impl>()) {
+	impl->hashers.emplace_back("default", [] { return new PyCrypto::SHA256PyCrypto(); });
+#ifdef FEAT_LIBSODIUM
+	impl->hashers.emplace_back("sodium", [] { return new Sodium::SHA256Sodium(); });
+#endif
+}
+
+Core::~Core() = default;
+
+void Core::list_hashers() const {
+	for (auto& hasher : impl->hashers) {
+		std::cout << hasher.name << std::endl;
+	}
+}
+
+sha256* Core::hasher() const {
+	return impl->hashers.rbegin()->creator();
+}
 
 Hash::Hash(sha256& sha, const void* data, size_t length) {
 	sha.reset();
@@ -21,7 +59,7 @@ Hash::Hash(sha256& sha, const void* data, size_t length) {
 
 Hash::Hash(const void *data, size_t length)
 {
-	sha256 sha;
+	PyCrypto::SHA256PyCrypto sha;
 
 	sha.update(data, length);
 	sha.digest(hash);

@@ -19,12 +19,14 @@ using namespace std;
 struct threadparam_t 
 {
 	const Hash				*targetHash;
+	sha256					*sha;
 	atomic_uint_fast32_t	progress;
 	const uint_fast32_t		start;
 	const uint_fast32_t		count;
 	const unsigned			threadnum;
 };
 
+//TODO: clean shutdown if all thread exhaust their keyspace slices;
 //TODO: get rid of the globals.
 bool debug = false;
 vector<unique_ptr<threadparam_t>> params;
@@ -38,7 +40,6 @@ static void bruteforce(threadparam_t *param)
 				", range " << param->start << "-" << (param->start + param->count) << endl;
 	}
 
-	sha256 sha;
 	uint_fast32_t count;
 	runpermutations(param->start, param->count, false, [&](const char *cpr) -> bool {
 		// Ugh, this is a bit hacky... so, the "count" param is the number of years the thread processes,
@@ -49,7 +50,7 @@ static void bruteforce(threadparam_t *param)
 			param->progress += 1'000;
 		}
 
-		if(const Hash currentHash(sha, cpr, 10); currentHash == *param->targetHash)
+		if(const Hash currentHash(*param->sha, cpr, 10); currentHash == *param->targetHash)
 		{
 			cout << endl << "Thread " << param->threadnum << ": got a match! CPR == " << cpr << endl;
 			g_stopSearching = true;
@@ -62,12 +63,14 @@ static void bruteforce(threadparam_t *param)
 	}
 }
 
-static vector<thread> createAndLaunchWorkers(uint8_t numThreads, const Hash& targetHash);
+static vector<thread> createAndLaunchWorkers(const Core& core, uint8_t numThreads, const Hash& targetHash);
 static void waitForWorkers(vector<thread>& workers);
 static void reportProgress(const vector<unique_ptr<threadparam_t>> & vector);
 
 int main(int argc, char *argv[])
 {
+	const Core core;
+
 	if(argc != 3)
 	{
 		cout << "bruteforce [numthreads] [sha256-hash] - tries to find a CPR number that matches your hash." << endl <<
@@ -83,7 +86,7 @@ int main(int argc, char *argv[])
 
 		const Hash targetHash = Hash::fromHexString(argv[2]);
 
-		vector<thread> threads = createAndLaunchWorkers(static_cast<uint8_t>(numThreads), targetHash);
+		vector<thread> threads = createAndLaunchWorkers(core, static_cast<uint8_t>(numThreads), targetHash);
 		cout <<  "Worker threads launched, waiting for completion - this may take a while!" << endl;
 		reportProgress(params);
 		waitForWorkers(threads);
@@ -104,7 +107,7 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-static vector<thread> createAndLaunchWorkers(uint8_t numThreads, const Hash& targetHash)
+static vector<thread> createAndLaunchWorkers(const Core& core, uint8_t numThreads, const Hash& targetHash)
 {
 	constexpr uint32_t keyspace = 1'000'000;
 	const auto slicesize = static_cast<unsigned>( ceil(static_cast<double>(keyspace) / numThreads) );
@@ -114,6 +117,7 @@ static vector<thread> createAndLaunchWorkers(uint8_t numThreads, const Hash& tar
 	{
 		auto& p = params.emplace_back(make_unique<threadparam_t>(
 			&targetHash,
+			core.hasher(),
 			0,
 			t * slicesize,
 			min(slicesize, (keyspace - (t * slicesize))),

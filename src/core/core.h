@@ -14,6 +14,17 @@ namespace cprfun {
 
 static const unsigned days_per_year = 366;										// to avoid dealing with leap years
 
+class Core {
+	struct Impl;
+	std::unique_ptr<Impl> impl;
+public:
+	Core();
+	~Core();
+
+	void list_hashers() const;
+	sha256* hasher() const;
+};
+
 void runpermutations(uint32_t start, uint32_t len, bool exhaustive, const std::function<bool(const char*)>& func);
 
 class Hash {
