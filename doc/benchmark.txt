@@ -1,5 +1,9 @@
 Project benchmarks, reverse chronological order.
 
+2025-02-17: introduced libsodium SHA256, only tested on laptop so far...
+	Air-M2 dynamic/PyCrypto: Runtime 5561ms, 3290775 hashops/sec
+	Air-M2 dynamic/Sodium:   Runtime 3534ms, 5178268 hashops/sec
+
 2025-02-16: alignment and memory layout fixes
 	perf bruteforce --benchmark: Runtime 3440ms, 5319767 hashops/sec
          Elapsed time   : 3.44
