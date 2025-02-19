@@ -1,0 +1,66 @@
+Meson / VCPKG
+https://github.com/mesonbuild/meson/issues/3500\
+https://decovar.dev/blog/2022/10/30/cpp-dependencies-with-vcpkg/
+https://twdev.blog/2022/09/meson/
+https://www.reddit.com/r/cpp/search/?q=dependency&cId=5e2ba5cb-f041-4c4f-b15f-8fabf697e56f&iId=d133b912-14ac-4515-b8e1-cb98b02c6701
+https://neugierig.org/software/blog/ (egentligt mere generelt, men der var stuff om build systems her)
+
+
+Linux power management
+https://z8.re/blog/aspm.html
+https://github.com/notthebee/autoaspm?tab=readme-ov-file
+
+
+Tools
+https://github.com/HyperDbg/HyperDbg?tab=readme-ov-file
+https://docs.helix-editor.com/syntax-aware-motions.html
+https://jedisct1.github.io/minisign/ - Release signing
+https://meldmerge.org/#features - diff/merge
+https://www.flatcar.org - flatcar container linux distro
+https://www.reddit.com/r/selfhosted/comments/1e33746/does_anyone_have_experience_selfhosting_with/
+
+
+
+Hashing
+https://bench.cr.yp.to/primitives-hash.html
+https://www.post-apocalyptic-crypto.org/timecop/
+https://github.com/openssl/openssl/blob/master/crypto/sha/asm/sha512-ia64.pl
+https://github.com/jedisct1/libsodium/blob/master/src/libsodium/crypto_hash/sha256/cp/hash_sha256_cp.c
+https://github.com/jedisct1/supercop/blob/master/crypto_hashblocks/sha256/dolbeau/amd64-sha/blocks.c
+
+More general C++ stuff
+https://www.google.com/search?q=std%3A%3Afunction%20problems
+https://www.foonathan.net/
+https://www.thecodedmessage.com/
+https://stackoverflow.com/questions/36980975/what-are-the-c-gsl-guidelines
+https://github.com/uxlfoundation/oneTBB/tree/master - intels building blocks, optimeret kode
+
+
+Postgres / Timescale
+https://www.timescale.com/learn/postgresql-performance-tuning-designing-and-implementing-database-schema
+https://planetscale.com/blog/the-problem-with-using-a-uuid-primary-key-in-mysql
+https://buildkite.com/resources/blog/goodbye-integers-hello-uuids/
+https://github.com/paralleldrive/cuid2
+https://www.morling.dev/blog/last-updated-columns-with-postgres/
+https://github.com/timescale/templates/tree/main/sensors
+https://www.youtube.com/@TimescaleDB/videos
+
+
+Electronics
+https://mitxela.com/projects/hardware
+https://www.electronicdesign.com/technologies/power/power-protection/article/21120031/snubber-capacitors-stop-spikes
+https://forum.arduino.cc/t/flyback-diodes-and-why-you-need-them/675409/7
+https://forum.arduino.cc/t/flyback-diodes-and-why-you-need-them-comments-here-please/675412/4
+https://www.hackster.io/BadBallscrewBob/multi-stage-ventilation-1ace65
+https://skillbank.co.uk/arduino/motor2.htm#a3
+https://jomjol.github.io/AI-on-the-edge-device-docs/Installation/#3-sd-card
+"DC to Type USBC", så man slipper for 12V adapters:
+	https://www.aliexpress.com/item/1005006018729093.html?tt=CPS_NORMAL&afSmartRedirect=y
+https://www.tindie.com/products/code7/pcice/
+https://github.com/ZoidTechnology/PCIce/blob/master/hardware/schematic.pdf
+https://github.com/Wovyn/esp32-ld2410-radar-sensor-mqtt-ota - vistnok til min radar sensor dims?
+
+
+UI stuff
+https://wails.io/
+
